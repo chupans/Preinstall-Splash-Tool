@@ -12,8 +12,11 @@ private:
 private:
 	CXMLConfig config;
 	CImage background;
+	CImage button_icon;
+	std::vector<CButton*> buttons;
 public:
 	CMainWnd();
+	virtual ~CMainWnd();
 	void Show();
 public:
 	afx_msg void OnPaint();

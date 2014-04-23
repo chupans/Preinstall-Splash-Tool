@@ -27,6 +27,7 @@ CMainWnd::CMainWnd()
 {
 	config = CXMLConfig("Docs\\configuration.xml");
 	background.Load(config.background_file_name);
+	button_icon.Load(config.button_icon_file_name);
 	Create(NULL, config.caption, WS_CAPTION | WS_SYSMENU | WS_DLGFRAME, GetCenterWndRect(config.min_width, config.min_height));
 	
 	for (UINT i = 0; i < config.items.size(); i++)
@@ -35,6 +36,15 @@ CMainWnd::CMainWnd()
 		CButton* b = new CButton();
 		b->Create(L"", WS_CHILD, r, this, i + 1);
 		b->ShowWindow(SW_SHOW);
+		buttons.push_back(b);
+	}
+}
+
+CMainWnd::~CMainWnd()
+{
+	for (std::vector<CButton*>::iterator i = buttons.begin(); i != buttons.end(); i++)
+	{
+		delete (*i);
 	}
 }
 
@@ -50,7 +60,6 @@ afx_msg void CMainWnd::OnPaint()
 	CRect client_rect;
 	GetClientRect(&client_rect);
 	if (!background.IsNull()) background.StretchBlt(dc, client_rect);
-
 }
 
 afx_msg void CMainWnd::OnButtonClick(UINT id)
