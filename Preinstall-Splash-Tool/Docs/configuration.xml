@@ -1,0 +1,15 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<params>
+  <header text="Test application" font="Arial" fontSize="40" fontWeight="Bold"></header>
+  <subHeader text="Version 0.3" font="Arial" fontSize="20" fontWeight="Regular"></subHeader>
+  <backgroundImage>Docs\background.jpg</backgroundImage>
+  <buttonIcon>Docs\button.bmp</buttonIcon>
+  <windowSize minWidth="300" minHeight="200" resizeByContent="Y"></windowSize>
+  <windowCaption>Test</windowCaption>
+  <items>
+    <item descr="Open some pdf" path="Docs\test.pdf" close="N"></item>
+    <item descr="Watch some movie" path="Docs\test.wmv" close="N"></item>
+    <item descr="Visit some site" path="http://google.com" close="N"></item>
+    <item descr="Run some program" path="Docs\test.exe" close="Y"></item>
+  </items>
+</params>
