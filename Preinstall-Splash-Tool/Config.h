@@ -33,3 +33,5 @@ struct CXMLConfig
 private:
 	void Init();
 };
+
+CFont* NewFont(const CString& typeface, int size, bool is_bold, bool is_italic);
