@@ -15,9 +15,9 @@ struct CXMLConfig
 	};
 
 	CString header;
-	//CFont header_font;
+	CFont* header_font;
 	CString sub_header;
-	//CFont sub_header_font;
+	CFont* sub_header_font;
 	CString background_file_name;
 	CString button_icon_file_name;
 	CString caption;
@@ -27,6 +27,11 @@ struct CXMLConfig
 
 	std::vector<Item> items;
 
-	CXMLConfig() {}
+	CXMLConfig();
 	CXMLConfig(const CString& xml_file_name);
+	~CXMLConfig();
+private:
+	void Init();
 };
+
+CFont* NewFont(const CString& typeface, int size, bool is_bold, bool is_italic);

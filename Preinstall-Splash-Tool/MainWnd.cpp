@@ -1,5 +1,14 @@
 #include "MainWnd.h"
 
+CSize CMainWnd::GetTextSize(CFont* font, const CString& str)
+{
+	CWindowDC dc(CWnd::FromHandle(::GetDesktopWindow()));
+	CFont* old = dc.SelectObject(font);
+	CSize size = dc.GetTextExtent(str);
+	dc.SelectObject(old);
+	return size;
+}
+
 CRect CMainWnd::GetCenterWndRect(int width, int height)
 {
 	CRect r;
@@ -27,14 +36,35 @@ CMainWnd::CMainWnd()
 {
 	config = CXMLConfig("Docs\\configuration.xml");
 	background.Load(config.background_file_name);
-	Create(NULL, config.caption, WS_CAPTION | WS_SYSMENU | WS_DLGFRAME, GetCenterWndRect(config.min_width, config.min_height));
+	button_icon.Load(config.button_icon_file_name);
+	DWORD style = WS_CAPTION | WS_SYSMENU | WS_DLGFRAME;
+	if (!config.resize_by_context) style |= WS_VSCROLL | WS_HSCROLL;
+	Create(NULL, config.caption, style, GetCenterWndRect(config.min_width, config.min_height));
 	
+	button_width = button_icon.IsNull() ? 40 : button_icon.GetWidth();
+	button_height = button_icon.IsNull() ? 40 : button_icon.GetHeight();
+	button_delta = 5;
+	x0 = y0 = 10;
+	button_font = NewFont(L"Arial", button_height/2, false, false);
+	header_size = GetTextSize(config.header_font, config.header);
+	sub_header_size = GetTextSize(config.sub_header_font, config.sub_header);
+	int y = y0 + header_size.cy + sub_header_size.cy + 3 * button_delta;
 	for (UINT i = 0; i < config.items.size(); i++)
 	{ 
-		CRect r = GetButtonRect(10, 10, 30, 30, 5, i);
+		CRect r = GetButtonRect(x0, y, button_width, button_height, button_delta, i);
 		CButton* b = new CButton();
-		b->Create(L"", WS_CHILD, r, this, i + 1);
+		b->Create(L"", WS_CHILD | BS_BITMAP, r, this, i + 1);
+		if (!button_icon.IsNull()) b->SetBitmap(button_icon);
 		b->ShowWindow(SW_SHOW);
+		buttons.push_back(b);
+	}
+}
+
+CMainWnd::~CMainWnd()
+{
+	for (std::vector<CButton*>::iterator i = buttons.begin(); i != buttons.end(); i++)
+	{
+		delete (*i);
 	}
 }
 
@@ -50,7 +80,20 @@ afx_msg void CMainWnd::OnPaint()
 	CRect client_rect;
 	GetClientRect(&client_rect);
 	if (!background.IsNull()) background.StretchBlt(dc, client_rect);
+	dc.SetBkMode(TRANSPARENT);
 
+	dc.SelectObject(config.header_font);
+	dc.TextOutW(x0 + 7 * button_delta, y0, config.header);
+	dc.SelectObject(config.sub_header_font);
+	dc.TextOutW(x0 + 8 * button_delta, y0 + header_size.cy + button_delta, config.sub_header);
+
+	dc.SelectObject(button_font);
+	int y = y0 + header_size.cy + sub_header_size.cy + 3 * button_delta;
+	for (UINT i = 0; i < buttons.size(); i++)
+	{
+		CRect r = GetButtonRect(x0, y, button_width, button_height, button_delta, i);
+		dc.TextOutW(r.right + button_delta, r.top, config.items[i].description);
+	}
 }
 
 afx_msg void CMainWnd::OnButtonClick(UINT id)

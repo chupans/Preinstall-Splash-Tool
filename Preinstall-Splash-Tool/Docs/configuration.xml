@@ -1,10 +1,10 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <params>
   <header text="Test application" font="Arial" fontSize="40" fontWeight="Bold"></header>
-  <subHeader text="Version 0.3" font="Arial" fontSize="20" fontWeight="Regular"></subHeader>
+  <subHeader text="Version 0.4" font="Arial" fontSize="20" fontWeight="Regular"></subHeader>
   <backgroundImage>Docs\background.jpg</backgroundImage>
   <buttonIcon>Docs\button.bmp</buttonIcon>
-  <windowSize minWidth="300" minHeight="200" resizeByContent="Y"></windowSize>
+  <windowSize minWidth="600" minHeight="400" resizeByContent="Y"></windowSize>
   <windowCaption>Test</windowCaption>
   <items>
     <item descr="Open some pdf" path="Docs\test.pdf" close="N"></item>
