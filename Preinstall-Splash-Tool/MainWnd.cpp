@@ -40,18 +40,10 @@ CMainWnd::CMainWnd()
 		buttons.push_back(b);
 	}
 
-	if (!config.resize_by_content)
-	{
-		SCROLLINFO si;
-		si.cbSize = sizeof(si);
-		si.fMask = SIF_ALL;
-		si.nPage = 1;
-		si.nMin = 0;
-		si.nMax = 10;
-		si.nPos = si.nTrackPos = 0;
-		SetScrollInfo(SB_VERT, &si); 
-		SetScrollInfo(SB_HORZ, &si);
-	}
+	vpos = hpos = 0;
+	vmax = config.wnd_height - config.min_height;
+	hmax = config.wnd_width - config.min_width;
+	InitScroll();
 }
 
 CMainWnd::~CMainWnd()
@@ -73,6 +65,8 @@ afx_msg void CMainWnd::OnPaint()
 	CPaintDC dc(this);
 	CRect client_rect;
 	GetClientRect(&client_rect);
+
+	SetStretchBltMode(dc, COLORONCOLOR);
 	config.background.StretchBlt(dc, client_rect);
 	
 	dc.SetBkMode(TRANSPARENT);
@@ -97,14 +91,102 @@ afx_msg void CMainWnd::OnButtonClick(UINT id)
 	if (item.close) this->DestroyWindow();
 }
 
+void CMainWnd::InitScroll()
+{
+	if (!config.resize_by_content)
+	{
+		SCROLLINFO si;
+		si.cbSize = sizeof(si);
+		si.fMask = SIF_ALL;
+		si.nPage = 1;
+		si.nMin = 0;
+		si.nMax = vmax;
+		si.nPos = si.nTrackPos = 0;
+		SetScrollInfo(SB_VERT, &si);
+
+		si.cbSize = sizeof(si);
+		si.fMask = SIF_ALL;
+		si.nPage = 1;
+		si.nMin = 0;
+		si.nMax = hmax;
+		si.nPos = si.nTrackPos = 0;
+
+		SetScrollInfo(SB_HORZ, &si);
+	}
+}
+
 afx_msg void CMainWnd::OnVScroll(UINT SBCode, UINT Pos, CScrollBar *SB)
 {
+	int old = vpos;
+
+	if (SBCode == SB_LINEDOWN) {
+		vpos++;
+		if (vpos > vmax) vpos = vmax;
+	}
+	if (SBCode == SB_LINEUP) {
+		vpos--;
+		if (vpos < 0) vpos = 0;
+	}
+	if (SBCode == SB_THUMBPOSITION) {
+		vpos = Pos;
+	}
+	if (SBCode == SB_THUMBTRACK) {
+		vpos = Pos;
+	}
+	if (SBCode == SB_PAGEDOWN) {
+		vpos += 5;
+		if (vpos > vmax) vpos = vmax;
+	}
+	if (SBCode == SB_PAGEUP) {
+		vpos -= 5;
+		if (vpos < 0) vpos = 0;
+	}
 	
+	SCROLLINFO si;
+	si.cbSize = sizeof(si);
+	si.fMask = SIF_POS;
+	si.nPos = vpos;
+	this->SetScrollInfo(SB_VERT, &si);
+
+	ScrollWindow(0, old - vpos);
+	InvalidateRect(NULL);
 }
 
 afx_msg void CMainWnd::OnHScroll(UINT SBCode, UINT Pos, CScrollBar *SB)
 {
+	int old = hpos;
 
+	if (SBCode == SB_LINERIGHT) {
+		hpos++;
+		if (hpos > hmax) hpos = hmax;
+	}
+	if (SBCode == SB_LINELEFT) {
+		hpos--;
+		if (hpos < 0) hpos = 0;
+	}
+	if (SBCode == SB_THUMBPOSITION) {
+		hpos = Pos;
+	}
+	if (SBCode == SB_THUMBTRACK) {
+		hpos = Pos;
+	}
+	if (SBCode == SB_PAGERIGHT) {
+		hpos += 5;
+		if (hpos > hmax) hpos = hmax;
+	}
+	if (SBCode == SB_PAGELEFT) {
+		hpos -= 5;
+		if (hpos < 0) hpos = 0;
+	}
+	
+	SCROLLINFO si;
+	si.cbSize = sizeof(si);
+	si.fMask = SIF_POS;
+	si.nPos = hpos;
+	this->SetScrollInfo(SB_HORZ, &si);
+
+	ScrollWindow(old - hpos, 0);
+	InvalidateRect(NULL, FALSE);
 }
 
 BEGIN_MESSAGE_MAP(CMainWnd, CFrameWnd)

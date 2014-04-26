@@ -11,6 +11,13 @@ private:
 private:
 	CXMLConfig config;
 	std::vector<CButton*> buttons;
+private:
+	int vmax;
+	int hmax;
+	int vpos;
+	int hpos;
+private:
+	void InitScroll();
 public:
 	CMainWnd();
 	virtual ~CMainWnd();

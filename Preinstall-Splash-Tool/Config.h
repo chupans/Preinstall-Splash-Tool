@@ -1,11 +1,8 @@
 #pragma once
 
 #include <vector>
-
-#include <afxwin.h>
-#include <atlimage.h>
-
 #include <mxml.h>
+#include "Application.h"
 
 struct CXMLConfig
 {
