@@ -1,14 +1,5 @@
 #include "MainWnd.h"
 
-CSize CMainWnd::GetTextSize(CFont* font, const CString& str)
-{
-	CWindowDC dc(CWnd::FromHandle(::GetDesktopWindow()));
-	CFont* old = dc.SelectObject(font);
-	CSize size = dc.GetTextExtent(str);
-	dc.SelectObject(old);
-	return size;
-}
-
 CRect CMainWnd::GetCenterWndRect(int width, int height)
 {
 	CRect r;
@@ -22,41 +13,44 @@ CRect CMainWnd::GetCenterWndRect(int width, int height)
 	return r;
 }
 
-CRect CMainWnd::GetButtonRect(int x0, int y0, int btn_width, int btn_height, int delta, int index)
-{
-	CRect r;
-	r.top = y0 + (btn_height + delta) * index;
-	r.left = x0;
-	r.right = r.left + btn_width;
-	r.bottom = r.top + btn_height;
-	return r;
-}
-
 CMainWnd::CMainWnd()
+	: config("Docs\\configuration.xml")
 {
-	config = CXMLConfig("Docs\\configuration.xml");
-	background.Load(config.background_file_name);
-	button_icon.Load(config.button_icon_file_name);
+	CRect rect;
 	DWORD style = WS_CAPTION | WS_SYSMENU | WS_DLGFRAME;
-	if (!config.resize_by_context) style |= WS_VSCROLL | WS_HSCROLL;
-	Create(NULL, config.caption, style, GetCenterWndRect(config.min_width, config.min_height));
+	if (config.resize_by_content)
+	{
+		rect = GetCenterWndRect(config.wnd_width, config.wnd_height);
+	}
+	else
+	{
+		rect = GetCenterWndRect(config.min_width, config.min_height);
+		style |= WS_VSCROLL | WS_HSCROLL;
+	}
+
+	Create(NULL, config.GetCaption(), style, rect);
 	
-	button_width = button_icon.IsNull() ? 40 : button_icon.GetWidth();
-	button_height = button_icon.IsNull() ? 40 : button_icon.GetHeight();
-	button_delta = 5;
-	x0 = y0 = 10;
-	button_font = NewFont(L"Arial", button_height/2, false, false);
-	header_size = GetTextSize(config.header_font, config.header);
-	sub_header_size = GetTextSize(config.sub_header_font, config.sub_header);
-	int y = y0 + header_size.cy + sub_header_size.cy + 3 * button_delta;
 	for (UINT i = 0; i < config.items.size(); i++)
 	{ 
-		CRect r = GetButtonRect(x0, y, button_width, button_height, button_delta, i);
+		CRect r = config.GetButtonRect(i);
 		CButton* b = new CButton();
 		b->Create(L"", WS_CHILD | BS_BITMAP, r, this, i + 1);
-		if (!button_icon.IsNull()) b->SetBitmap(button_icon);
+		b->SetBitmap(config.button);
 		b->ShowWindow(SW_SHOW);
 		buttons.push_back(b);
+	}
+
+	if (!config.resize_by_content)
+	{
+		SCROLLINFO si;
+		si.cbSize = sizeof(si);
+		si.fMask = SIF_ALL;
+		si.nPage = 1;
+		si.nMin = 0;
+		si.nMax = 10;
+		si.nPos = si.nTrackPos = 0;
+		SetScrollInfo(SB_VERT, &si); 
+		SetScrollInfo(SB_HORZ, &si);
 	}
 }
 
@@ -79,20 +73,20 @@ afx_msg void CMainWnd::OnPaint()
 	CPaintDC dc(this);
 	CRect client_rect;
 	GetClientRect(&client_rect);
-	if (!background.IsNull()) background.StretchBlt(dc, client_rect);
+	config.background.StretchBlt(dc, client_rect);
+	
 	dc.SetBkMode(TRANSPARENT);
 
-	dc.SelectObject(config.header_font);
-	dc.TextOutW(x0 + 7 * button_delta, y0, config.header);
-	dc.SelectObject(config.sub_header_font);
-	dc.TextOutW(x0 + 8 * button_delta, y0 + header_size.cy + button_delta, config.sub_header);
+	CPoint p = config.GetHeaderPosition();
+	config.header.Draw(dc, p.x, p.y);
 
-	dc.SelectObject(button_font);
-	int y = y0 + header_size.cy + sub_header_size.cy + 3 * button_delta;
-	for (UINT i = 0; i < buttons.size(); i++)
+	p = config.GetSubHeaderPosition();
+	config.sub_header.Draw(dc, p.x, p.y);
+
+	for (UINT i = 0; i < config.items.size(); i++)
 	{
-		CRect r = GetButtonRect(x0, y, button_width, button_height, button_delta, i);
-		dc.TextOutW(r.right + button_delta, r.top, config.items[i].description);
+		CPoint pos = config.GetButtonTextPosition(i);
+		config.items[i].description.Draw(dc, pos.x, pos.y);
 	}
 }
 
@@ -103,7 +97,19 @@ afx_msg void CMainWnd::OnButtonClick(UINT id)
 	if (item.close) this->DestroyWindow();
 }
 
+afx_msg void CMainWnd::OnVScroll(UINT SBCode, UINT Pos, CScrollBar *SB)
+{
+	
+}
+
+afx_msg void CMainWnd::OnHScroll(UINT SBCode, UINT Pos, CScrollBar *SB)
+{
+
+}
+
 BEGIN_MESSAGE_MAP(CMainWnd, CFrameWnd)
 	ON_WM_PAINT()
 	ON_COMMAND_RANGE(0, (UINT)(-1), &CMainWnd::OnButtonClick)
+	ON_WM_VSCROLL()
+	ON_WM_HSCROLL()
 END_MESSAGE_MAP()
