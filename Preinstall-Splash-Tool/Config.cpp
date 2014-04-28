@@ -15,16 +15,16 @@ CXMLConfig::Text::Text()
 void CXMLConfig::Text::Load(const Node& source)
 {
 	text = source.getAttribute("text").c_str();
-	font = LoadFont(source);
+	this->font = LoadFont(source);
 	CSize size = CountTextSize(font, text);
 	width = size.cx;
 	height = size.cy;
 }
 
-void CXMLConfig::Text::Draw(CDC& dc, int x, int y)
+void CXMLConfig::Text::Draw(CDC& dc, CPoint pos)
 {
 	dc.SelectObject(font);
-	dc.TextOutW(x, y, text);
+	dc.TextOutW(pos.x, pos.y, text);
 }
 
 CFont* CXMLConfig::Text::NewFont(const CString& typeface, int size, bool is_bold, bool is_italic)
@@ -79,14 +79,8 @@ void CXMLConfig::Item::Load(const Node& source, CFont* font)
 
 //CXMLConfig
 
-CXMLConfig::CXMLConfig()
-{
-	Init();
-}
-
 CXMLConfig::CXMLConfig(const CString& xml_file_name)
 {
-	Init();
 	ifstream stream((LPCWSTR)xml_file_name);
 	if (!stream.is_open()) throw CString(L"XML configuration file not found.");
 	try
@@ -105,11 +99,11 @@ CXMLConfig::CXMLConfig(const CString& xml_file_name)
 
 		if (button.IsNull()) throw CString(L"Button icon file not found.");
 
-		button_font = Text::NewFont(params_node.find("header")->getAttribute("font").c_str(), GetButtonHeight() / 2);
+		button_font = Text::NewFont(params_node.find("header")->getAttribute("font").c_str(), GetButtonSize().cy / 2);
 
 		Node& window_size_node = *params_node.find("windowSize");
-		min_width = atoi(window_size_node.getAttribute("minWidth").c_str());
-		min_height = atoi(window_size_node.getAttribute("minHeight").c_str());
+		min_wnd_size.cx = atoi(window_size_node.getAttribute("minWidth").c_str());
+		min_wnd_size.cy = atoi(window_size_node.getAttribute("minHeight").c_str());
 		resize_by_content = window_size_node.getAttribute("resizeByContent") == "Y";
 
 		Node& items_node = *params_node.find("items");
@@ -120,7 +114,7 @@ CXMLConfig::CXMLConfig(const CString& xml_file_name)
 			items.push_back(item);
 		}
 
-		CountWndSize();
+		CountMaxWndSize();
 	}
 	catch (const CString& exception) { throw exception; }
 	catch (...)
@@ -129,18 +123,11 @@ CXMLConfig::CXMLConfig(const CString& xml_file_name)
 	}
 }
 
-void CXMLConfig::Init()
-{
-	max_width = max_height = min_width = min_height = 0;
-	resize_by_content = true;
-	button_font = NULL;
-}
-
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 void CXMLConfig::CountDeltas()
 {
-	border_button_delta_x = GetButtonWidth();
+	border_button_delta_x = GetButtonSize().cx;
 	button_text_delta_x = border_button_delta_x / 2;
 	button_button_delta_y = button_text_delta_x;
 	subheader_button_delta_y = button_text_delta_x;
@@ -148,18 +135,18 @@ void CXMLConfig::CountDeltas()
 	header_subheader_delta_y = 5;
 }
 
-void CXMLConfig::CountWndSize()
+void CXMLConfig::CountMaxWndSize()
 {
 	CountDeltas();
 
-	max_width = min_width;
-	max_height = max(min_height, GetButtonRect(items.size()).bottom + 2 * button_button_delta_y);
+	max_wnd_size.cx = min_wnd_size.cx;
+	max_wnd_size.cy = max(min_wnd_size.cy, GetButtonRect(items.size()).bottom + 2 * button_button_delta_y);
 
-	max_width = max(max_width, 1.5 * header.width);
-	max_width = max(max_width, 1.5 * sub_header.width);
+	max_wnd_size.cx = max(max_wnd_size.cx, 3 * header.width / 2);
+	max_wnd_size.cx = max(max_wnd_size.cx, 3 * sub_header.width / 2);
 	for (UINT i = 0; i < items.size(); i++)
 	{
-		max_width = max(max_width, GetButtonTextPosition(i).x + items[i].description.width + button_text_delta_x);
+		max_wnd_size.cx = max(max_wnd_size.cx, GetButtonTextPosition(i).x + items[i].description.width + button_text_delta_x);
 	}
 
 }
@@ -173,37 +160,32 @@ CPoint CXMLConfig::GetHeaderPosition()
 {
 	CPoint pos;
 	pos.y = border_header_delta_y;
-	pos.x = (max_width - header.width) / 2;
+	pos.x = (max_wnd_size.cx - header.width) / 2;
 	return pos;
 }
 
 CPoint CXMLConfig::GetSubHeaderPosition()
 {
 	CPoint pos = GetHeaderPosition();
-	pos.x = (max_width - sub_header.width) / 2;
+	pos.x = (max_wnd_size.cx - sub_header.width) / 2;
 	pos.y += header.height + header_subheader_delta_y;
 	return pos;
 }
 
-int CXMLConfig::GetButtonWidth()
+CSize CXMLConfig::GetButtonSize()
 {
-	return button.GetWidth();
-}
-
-int CXMLConfig::GetButtonHeight()
-{
-	return button.GetHeight();
+	return CSize(button.GetWidth(), button.GetHeight());
 }
 
 CRect CXMLConfig::GetButtonRect(int button_number)
 {
 	int y = GetSubHeaderPosition().y + sub_header.height + subheader_button_delta_y;
-	y += button_number * (GetButtonHeight() + button_button_delta_y);
+	y += button_number * (GetButtonSize().cy + button_button_delta_y);
 	CRect rect;
 	rect.left = border_button_delta_x;
-	rect.right = rect.left + GetButtonWidth();
+	rect.right = rect.left + GetButtonSize().cx;
 	rect.top = y;
-	rect.bottom = rect.top + GetButtonHeight();
+	rect.bottom = rect.top + GetButtonSize().cy;
 	return rect;
 }
 

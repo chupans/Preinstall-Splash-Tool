@@ -17,7 +17,7 @@ public:
 	public:
 		Text();
 		void Load(const MXML::Node& source);
-		void Draw(CDC& dc, int x, int y);
+		void Draw(CDC& dc, CPoint pos);
 	public:
 		static CFont* NewFont(const CString& typeface, int size, bool is_bold = false, bool is_italic = false);
 		static CFont* LoadFont(const MXML::Node& source);
@@ -40,22 +40,18 @@ public:
 	CImage background;
 	CImage button;
 
-	int min_width;
-	int min_height;
+	CSize min_wnd_size;
 	bool resize_by_content;
 
 	std::vector<Item> items;
 public:
 	CFont* button_font;
-	int max_width;
-	int max_height;
+	CSize max_wnd_size;
 public:
-	CXMLConfig();
 	CXMLConfig(const CString& xml_file_name);
 private:
-	void Init();
 	void CountDeltas();
-	void CountWndSize();
+	void CountMaxWndSize();
 private:
 	int border_header_delta_y;
 	int header_subheader_delta_y;
@@ -67,8 +63,7 @@ public:
 	CString GetCaption();
 	CPoint GetHeaderPosition();
 	CPoint GetSubHeaderPosition();
-	int GetButtonWidth();
-	int GetButtonHeight();
+	CSize GetButtonSize();
 	CRect GetButtonRect(int button_number);
 	CPoint GetButtonTextPosition(int button_number);
 };

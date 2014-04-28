@@ -20,16 +20,39 @@ CMainWnd::CMainWnd()
 	DWORD style = WS_CAPTION | WS_SYSMENU | WS_DLGFRAME;
 	if (config.resize_by_content)
 	{
-		rect = GetCenterWndRect(config.max_width, config.max_height);
+		rect = GetCenterWndRect(config.max_wnd_size.cx, config.max_wnd_size.cy);
 	}
 	else
 	{
-		rect = GetCenterWndRect(config.min_width, config.min_height);
+		rect = GetCenterWndRect(config.min_wnd_size.cx, config.min_wnd_size.cy);
+		
 		style |= WS_VSCROLL | WS_HSCROLL;
+		vpos = hpos = 0;
+		vmax = config.max_wnd_size.cy - config.min_wnd_size.cy;
+		hmax = config.max_wnd_size.cx - config.min_wnd_size.cx;
 	}
 
 	Create(NULL, config.GetCaption(), style, rect);
 	
+	if (!config.resize_by_content)
+	{
+		SCROLLINFO si;
+		si.cbSize = sizeof(si);
+		si.fMask = SIF_ALL;
+		si.nPage = 1;
+		si.nMin = 0;
+		si.nMax = vmax;
+		si.nPos = si.nTrackPos = 0;
+		SetScrollInfo(SB_VERT, &si);
+		si.cbSize = sizeof(si);
+		si.fMask = SIF_ALL;
+		si.nPage = 1;
+		si.nMin = 0;
+		si.nMax = hmax;
+		si.nPos = si.nTrackPos = 0;
+		SetScrollInfo(SB_HORZ, &si);
+	}
+
 	for (UINT i = 0; i < config.items.size(); i++)
 	{ 
 		CRect r = config.GetButtonRect(i);
@@ -40,10 +63,6 @@ CMainWnd::CMainWnd()
 		buttons.push_back(b);
 	}
 
-	vpos = hpos = 0;
-	vmax = config.max_height - config.min_height;
-	hmax = config.max_width - config.min_width;
-	InitScroll();
 }
 
 CMainWnd::~CMainWnd()
@@ -64,14 +83,16 @@ afx_msg void CMainWnd::OnPaint()
 {
 	CPoint p0(-hpos, -vpos);
 	CPaintDC dc(this);
+
 	CRect client_rect;
 	GetClientRect(&client_rect);
+
 	if (!config.resize_by_content)
 	{
-		int dx = config.min_width - client_rect.Width();
-		int dy = config.min_height - client_rect.Height();
-		client_rect.right = dx + config.max_width;
-		client_rect.bottom = dy + config.max_height;
+		int dx = config.min_wnd_size.cx - client_rect.Width();
+		int dy = config.min_wnd_size.cy - client_rect.Height();
+		client_rect.right = dx + config.max_wnd_size.cx;
+		client_rect.bottom = dy + config.max_wnd_size.cy;
 	}
 
 	SetStretchBltMode(dc, COLORONCOLOR);
@@ -79,16 +100,12 @@ afx_msg void CMainWnd::OnPaint()
 	
 	dc.SetBkMode(TRANSPARENT);
 
-	CPoint p = config.GetHeaderPosition();
-	config.header.Draw(dc, p0.x + p.x, p0.y + p.y);
-
-	p = config.GetSubHeaderPosition();
-	config.sub_header.Draw(dc, p0.x + p.x, p0.y + p.y);
+	config.header.Draw(dc, p0 + config.GetHeaderPosition());
+	config.sub_header.Draw(dc, p0 + config.GetSubHeaderPosition());
 
 	for (UINT i = 0; i < config.items.size(); i++)
 	{
-		p = config.GetButtonTextPosition(i);
-		config.items[i].description.Draw(dc, p0.x + p.x, p0.y + p.y);
+		config.items[i].description.Draw(dc, p0 + config.GetButtonTextPosition(i));
 	}
 }
 
@@ -99,57 +116,20 @@ afx_msg void CMainWnd::OnButtonClick(UINT id)
 	if (item.close) this->DestroyWindow();
 }
 
-void CMainWnd::InitScroll()
-{
-	if (!config.resize_by_content)
-	{
-		SCROLLINFO si;
-		si.cbSize = sizeof(si);
-		si.fMask = SIF_ALL;
-		si.nPage = 1;
-		si.nMin = 0;
-		si.nMax = vmax;
-		si.nPos = si.nTrackPos = 0;
-		SetScrollInfo(SB_VERT, &si);
-
-		si.cbSize = sizeof(si);
-		si.fMask = SIF_ALL;
-		si.nPage = 1;
-		si.nMin = 0;
-		si.nMax = hmax;
-		si.nPos = si.nTrackPos = 0;
-
-		SetScrollInfo(SB_HORZ, &si);
-	}
-}
-
 afx_msg void CMainWnd::OnVScroll(UINT SBCode, UINT Pos, CScrollBar *SB)
 {
 	int old = vpos;
 
-	if (SBCode == SB_LINEDOWN) {
-		vpos++;
-		if (vpos > vmax) vpos = vmax;
+	switch (SBCode)
+	{
+	case SB_LINEDOWN: vpos++; break;
+	case SB_LINEUP: vpos--; break;
+	case SB_PAGEDOWN: vpos += 5; break;
+	case SB_PAGEUP: vpos -= 5; break;
+	case SB_THUMBPOSITION: case SB_THUMBTRACK: vpos = Pos; break;
 	}
-	if (SBCode == SB_LINEUP) {
-		vpos--;
-		if (vpos < 0) vpos = 0;
-	}
-	if (SBCode == SB_THUMBPOSITION) {
-		vpos = Pos;
-	}
-	if (SBCode == SB_THUMBTRACK) {
-		vpos = Pos;
-	}
-	if (SBCode == SB_PAGEDOWN) {
-		vpos += 5;
-		if (vpos > vmax) vpos = vmax;
-	}
-	if (SBCode == SB_PAGEUP) {
-		vpos -= 5;
-		if (vpos < 0) vpos = 0;
-	}
-	
+	if (vpos > vmax) vpos = vmax; else if (vpos < 0) vpos = 0;
+
 	SCROLLINFO si;
 	si.cbSize = sizeof(si);
 	si.fMask = SIF_POS;
@@ -164,28 +144,15 @@ afx_msg void CMainWnd::OnHScroll(UINT SBCode, UINT Pos, CScrollBar *SB)
 {
 	int old = hpos;
 
-	if (SBCode == SB_LINERIGHT) {
-		hpos++;
-		if (hpos > hmax) hpos = hmax;
+	switch (SBCode)
+	{
+	case SB_LINERIGHT: hpos++; break;
+	case SB_LINELEFT: hpos--; break;
+	case SB_PAGERIGHT: hpos += 5; break;
+	case SB_PAGELEFT: hpos -= 5; break;
+	case SB_THUMBPOSITION: case SB_THUMBTRACK: hpos = Pos; break;
 	}
-	if (SBCode == SB_LINELEFT) {
-		hpos--;
-		if (hpos < 0) hpos = 0;
-	}
-	if (SBCode == SB_THUMBPOSITION) {
-		hpos = Pos;
-	}
-	if (SBCode == SB_THUMBTRACK) {
-		hpos = Pos;
-	}
-	if (SBCode == SB_PAGERIGHT) {
-		hpos += 5;
-		if (hpos > hmax) hpos = hmax;
-	}
-	if (SBCode == SB_PAGELEFT) {
-		hpos -= 5;
-		if (hpos < 0) hpos = 0;
-	}
+	if (vpos > vmax) vpos = vmax; else if (vpos < 0) vpos = 0;
 	
 	SCROLLINFO si;
 	si.cbSize = sizeof(si);
