@@ -1,14 +1,35 @@
 #include "Config.h"
 #include <fstream>
-#include <mxml.h>
-#include <mxml_document.h>
 
 using namespace std;
 using namespace MXML;
 
-CFont* NewFont(const CString& typeface, int size, bool is_bold,	bool is_italic)
+//CXMLConfig::Text
+
+CXMLConfig::Text::Text()
 {
-	CWindowDC dc(CWnd::FromHandle(GetDesktopWindow()));
+	width = height = 0;
+	font = NULL;
+}
+
+void CXMLConfig::Text::Load(const Node& source)
+{
+	text = source.getAttribute("text").c_str();
+	this->font = LoadFont(source);
+	CSize size = CountTextSize(font, text);
+	width = size.cx;
+	height = size.cy;
+}
+
+void CXMLConfig::Text::Draw(CDC& dc, CPoint pos)
+{
+	dc.SelectObject(font);
+	dc.TextOutW(pos.x, pos.y, text);
+}
+
+CFont* CXMLConfig::Text::NewFont(const CString& typeface, int size, bool is_bold, bool is_italic)
+{
+	static CWindowDC dc(CWnd::FromHandle(GetDesktopWindow()));
 	int pixels_per_inch = dc.GetDeviceCaps(LOGPIXELSY);
 	int font_height = -MulDiv(size, pixels_per_inch, 72);
 	CFont* font = new CFont();
@@ -17,79 +38,162 @@ CFont* NewFont(const CString& typeface, int size, bool is_bold,	bool is_italic)
 	return font;
 }
 
-CFont* ReadFont(const Node::find_iterator& node)
+CFont* CXMLConfig::Text::LoadFont(const Node& source)
 {
-	CString typeface = node->getAttribute("font").c_str();
-	int font_size = atoi(node->getAttribute("fontSize").c_str());
+	CString typeface = source.getAttribute("font").c_str();
+	int font_size = atoi(source.getAttribute("fontSize").c_str());
 	bool is_bold = false;
 	bool is_italic = false;
-	if (node->getAttribute("fontWeight") == "Bold") is_bold = true;
-	else if (node->getAttribute("fontWeight") == "Italic") is_italic = true;
+	if (source.getAttribute("fontWeight") == "Bold") is_bold = true;
+	else if (source.getAttribute("fontWeight") == "Italic") is_italic = true;
 	return NewFont(typeface, font_size, is_bold, is_italic);
 }
 
-CXMLConfig::CXMLConfig()
+CSize CXMLConfig::Text::CountTextSize(CFont* font, const CString& str)
 {
-	Init();
+	static CWindowDC dc(CWnd::FromHandle(::GetDesktopWindow()));
+	CFont* old = dc.SelectObject(font);
+	CSize size = dc.GetTextExtent(str);
+	dc.SelectObject(old);
+	return size;
 }
 
-CXMLConfig::~CXMLConfig()
+//CXMLConfig::Item
+
+CXMLConfig::Item::Item()
 {
-	//delete header_font;
-	//delete sub_header_font;
+	close = false;
 }
+
+void CXMLConfig::Item::Load(const Node& source, CFont* font)
+{
+	description.text = source.getAttribute("descr").c_str();
+	description.font = font;
+	CSize size = Text::CountTextSize(font, description.text);
+	description.width = size.cx;
+	description.height = size.cy;
+
+	path = source.getAttribute("path").c_str();
+	close = (source.getAttribute("close") == "Y");
+}
+
+//CXMLConfig
 
 CXMLConfig::CXMLConfig(const CString& xml_file_name)
 {
-	Init();
 	ifstream stream((LPCWSTR)xml_file_name);
 	if (!stream.is_open()) throw CString(L"XML configuration file not found.");
 	try
 	{
 		Document doc(stream);
-		Node::find_iterator params_node = doc.root()->find("params");
+		Node& params_node = *doc.root()->find("params");
 
-		Node::find_iterator header_node = params_node->find("header");
-		header = header_node->getAttribute("text").c_str();
-		header_font = ReadFont(header_node);
+		header.Load(*params_node.find("header"));
+		sub_header.Load(*params_node.find("subHeader"));
 
-		Node::find_iterator sub_header_node = params_node->find("subHeader");
-		sub_header = sub_header_node->getAttribute("text").c_str();
-		sub_header_font = ReadFont(sub_header_node);
+		CString background_file_name = params_node.find("backgroundImage")->data().c_str();
+		CString button_file_name = params_node.find("buttonIcon")->data().c_str();
 
-		background_file_name = params_node->find("backgroundImage")->data().c_str();
-		button_icon_file_name = params_node->find("buttonIcon")->data().c_str();
+		background.Load(background_file_name);
+		button.Load(button_file_name);
 
-		Node::find_iterator window_size_node = params_node->find("windowSize");
-		if (window_size_node != params_node->end()) min_width = atoi(window_size_node->getAttribute("minWidth").c_str());
-		if (min_width == 0) min_width = 300;
-		if (min_height == 0) min_height = 200;
-		if (window_size_node != params_node->end()) min_height = atoi(window_size_node->getAttribute("minHeight").c_str());
-		if (window_size_node != params_node->end()) resize_by_context = window_size_node->getAttribute("resizeByContent") == "Y";
+		if (button.IsNull()) throw CString(L"Button icon file not found.");
 
-		Node::find_iterator items_node = params_node->find("items");
-		for (Node::iterator i = items_node->begin(); i != items_node->end(); i++)
+		button_font = Text::NewFont(params_node.find("header")->getAttribute("font").c_str(), GetButtonSize().cy / 2);
+
+		Node& window_size_node = *params_node.find("windowSize");
+		min_wnd_size.cx = atoi(window_size_node.getAttribute("minWidth").c_str());
+		min_wnd_size.cy = atoi(window_size_node.getAttribute("minHeight").c_str());
+		resize_by_content = window_size_node.getAttribute("resizeByContent") == "Y";
+
+		Node& items_node = *params_node.find("items");
+		for (Node::iterator i = items_node.begin(); i != items_node.end(); i++)
 		{
 			Item item; 
-			item.description = i->getAttribute("descr").c_str();
-			item.path = i->getAttribute("path").c_str();
-			item.close = (i->getAttribute("close") == "Y");
+			item.Load(*i, button_font);
 			items.push_back(item);
 		}
 
-		Node::find_iterator caption_node = params_node->find("windowCaption");
-		if (caption_node != params_node->end()) caption = caption_node->data().c_str();
+		CountMaxWndSize();
 	}
+	catch (const CString& exception) { throw exception; }
 	catch (...)
 	{
 		throw CString(L"Can not read XML configuration file.");
 	}
 }
 
-void CXMLConfig::Init()
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+void CXMLConfig::CountDeltas()
 {
-	header_font = sub_header_font = NULL;
-	min_width = 0;
-	min_height = 0;
-	resize_by_context = true;
+	border_button_delta_x = GetButtonSize().cx;
+	button_text_delta_x = border_button_delta_x / 2;
+	button_button_delta_y = button_text_delta_x;
+	subheader_button_delta_y = button_text_delta_x;
+	border_header_delta_y = 5;
+	header_subheader_delta_y = 5;
+}
+
+void CXMLConfig::CountMaxWndSize()
+{
+	CountDeltas();
+
+	max_wnd_size.cx = min_wnd_size.cx;
+	max_wnd_size.cy = max(min_wnd_size.cy, GetButtonRect(items.size()).bottom + 2 * button_button_delta_y);
+
+	max_wnd_size.cx = max(max_wnd_size.cx, 3 * header.width / 2);
+	max_wnd_size.cx = max(max_wnd_size.cx, 3 * sub_header.width / 2);
+	for (UINT i = 0; i < items.size(); i++)
+	{
+		max_wnd_size.cx = max(max_wnd_size.cx, GetButtonTextPosition(i).x + items[i].description.width + button_text_delta_x);
+	}
+
+}
+
+CString CXMLConfig::GetCaption()
+{
+	return header.text;
+}
+
+CPoint CXMLConfig::GetHeaderPosition()
+{
+	CPoint pos;
+	pos.y = border_header_delta_y;
+	pos.x = (max_wnd_size.cx - header.width) / 2;
+	return pos;
+}
+
+CPoint CXMLConfig::GetSubHeaderPosition()
+{
+	CPoint pos = GetHeaderPosition();
+	pos.x = (max_wnd_size.cx - sub_header.width) / 2;
+	pos.y += header.height + header_subheader_delta_y;
+	return pos;
+}
+
+CSize CXMLConfig::GetButtonSize()
+{
+	return CSize(button.GetWidth(), button.GetHeight());
+}
+
+CRect CXMLConfig::GetButtonRect(int button_number)
+{
+	int y = GetSubHeaderPosition().y + sub_header.height + subheader_button_delta_y;
+	y += button_number * (GetButtonSize().cy + button_button_delta_y);
+	CRect rect;
+	rect.left = border_button_delta_x;
+	rect.right = rect.left + GetButtonSize().cx;
+	rect.top = y;
+	rect.bottom = rect.top + GetButtonSize().cy;
+	return rect;
+}
+
+CPoint CXMLConfig::GetButtonTextPosition(int button_number)
+{
+	CRect button_rect = GetButtonRect(button_number);
+	CPoint pos;
+	pos.y = button_rect.top;
+	pos.x = button_rect.right + button_text_delta_x;
+	return pos;
 }

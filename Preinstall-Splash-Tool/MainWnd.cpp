@@ -1,14 +1,5 @@
 #include "MainWnd.h"
 
-CSize CMainWnd::GetTextSize(CFont* font, const CString& str)
-{
-	CWindowDC dc(CWnd::FromHandle(::GetDesktopWindow()));
-	CFont* old = dc.SelectObject(font);
-	CSize size = dc.GetTextExtent(str);
-	dc.SelectObject(old);
-	return size;
-}
-
 CRect CMainWnd::GetCenterWndRect(int width, int height)
 {
 	CRect r;
@@ -22,42 +13,56 @@ CRect CMainWnd::GetCenterWndRect(int width, int height)
 	return r;
 }
 
-CRect CMainWnd::GetButtonRect(int x0, int y0, int btn_width, int btn_height, int delta, int index)
-{
-	CRect r;
-	r.top = y0 + (btn_height + delta) * index;
-	r.left = x0;
-	r.right = r.left + btn_width;
-	r.bottom = r.top + btn_height;
-	return r;
-}
-
 CMainWnd::CMainWnd()
+	: config("Docs\\configuration.xml")
 {
-	config = CXMLConfig("Docs\\configuration.xml");
-	background.Load(config.background_file_name);
-	button_icon.Load(config.button_icon_file_name);
+	CRect rect;
 	DWORD style = WS_CAPTION | WS_SYSMENU | WS_DLGFRAME;
-	if (!config.resize_by_context) style |= WS_VSCROLL | WS_HSCROLL;
-	Create(NULL, config.caption, style, GetCenterWndRect(config.min_width, config.min_height));
+	if (config.resize_by_content)
+	{
+		rect = GetCenterWndRect(config.max_wnd_size.cx, config.max_wnd_size.cy);
+	}
+	else
+	{
+		rect = GetCenterWndRect(config.min_wnd_size.cx, config.min_wnd_size.cy);
+		
+		style |= WS_VSCROLL | WS_HSCROLL;
+		vpos = hpos = 0;
+		vmax = config.max_wnd_size.cy - config.min_wnd_size.cy;
+		hmax = config.max_wnd_size.cx - config.min_wnd_size.cx;
+	}
+
+	Create(NULL, config.GetCaption(), style, rect);
 	
-	button_width = button_icon.IsNull() ? 40 : button_icon.GetWidth();
-	button_height = button_icon.IsNull() ? 40 : button_icon.GetHeight();
-	button_delta = 5;
-	x0 = y0 = 10;
-	button_font = NewFont(L"Arial", button_height/2, false, false);
-	header_size = GetTextSize(config.header_font, config.header);
-	sub_header_size = GetTextSize(config.sub_header_font, config.sub_header);
-	int y = y0 + header_size.cy + sub_header_size.cy + 3 * button_delta;
+	if (!config.resize_by_content)
+	{
+		SCROLLINFO si;
+		si.cbSize = sizeof(si);
+		si.fMask = SIF_ALL;
+		si.nPage = 1;
+		si.nMin = 0;
+		si.nMax = vmax;
+		si.nPos = si.nTrackPos = 0;
+		SetScrollInfo(SB_VERT, &si);
+		si.cbSize = sizeof(si);
+		si.fMask = SIF_ALL;
+		si.nPage = 1;
+		si.nMin = 0;
+		si.nMax = hmax;
+		si.nPos = si.nTrackPos = 0;
+		SetScrollInfo(SB_HORZ, &si);
+	}
+
 	for (UINT i = 0; i < config.items.size(); i++)
 	{ 
-		CRect r = GetButtonRect(x0, y, button_width, button_height, button_delta, i);
+		CRect r = config.GetButtonRect(i);
 		CButton* b = new CButton();
 		b->Create(L"", WS_CHILD | BS_BITMAP, r, this, i + 1);
-		if (!button_icon.IsNull()) b->SetBitmap(button_icon);
+		b->SetBitmap(config.button);
 		b->ShowWindow(SW_SHOW);
 		buttons.push_back(b);
 	}
+
 }
 
 CMainWnd::~CMainWnd()
@@ -76,23 +81,31 @@ void CMainWnd::Show()
 
 afx_msg void CMainWnd::OnPaint()
 {
+	CPoint p0(-hpos, -vpos);
 	CPaintDC dc(this);
+
 	CRect client_rect;
 	GetClientRect(&client_rect);
-	if (!background.IsNull()) background.StretchBlt(dc, client_rect);
+
+	if (!config.resize_by_content)
+	{
+		int dx = config.min_wnd_size.cx - client_rect.Width();
+		int dy = config.min_wnd_size.cy - client_rect.Height();
+		client_rect.right = dx + config.max_wnd_size.cx;
+		client_rect.bottom = dy + config.max_wnd_size.cy;
+	}
+
+	SetStretchBltMode(dc, COLORONCOLOR);
+	config.background.StretchBlt(dc, p0 + client_rect);
+	
 	dc.SetBkMode(TRANSPARENT);
 
-	dc.SelectObject(config.header_font);
-	dc.TextOutW(x0 + 7 * button_delta, y0, config.header);
-	dc.SelectObject(config.sub_header_font);
-	dc.TextOutW(x0 + 8 * button_delta, y0 + header_size.cy + button_delta, config.sub_header);
+	config.header.Draw(dc, p0 + config.GetHeaderPosition());
+	config.sub_header.Draw(dc, p0 + config.GetSubHeaderPosition());
 
-	dc.SelectObject(button_font);
-	int y = y0 + header_size.cy + sub_header_size.cy + 3 * button_delta;
-	for (UINT i = 0; i < buttons.size(); i++)
+	for (UINT i = 0; i < config.items.size(); i++)
 	{
-		CRect r = GetButtonRect(x0, y, button_width, button_height, button_delta, i);
-		dc.TextOutW(r.right + button_delta, r.top, config.items[i].description);
+		config.items[i].description.Draw(dc, p0 + config.GetButtonTextPosition(i));
 	}
 }
 
@@ -103,7 +116,57 @@ afx_msg void CMainWnd::OnButtonClick(UINT id)
 	if (item.close) this->DestroyWindow();
 }
 
+afx_msg void CMainWnd::OnVScroll(UINT SBCode, UINT Pos, CScrollBar *SB)
+{
+	int old = vpos;
+
+	switch (SBCode)
+	{
+	case SB_LINEDOWN: vpos++; break;
+	case SB_LINEUP: vpos--; break;
+	case SB_PAGEDOWN: vpos += 5; break;
+	case SB_PAGEUP: vpos -= 5; break;
+	case SB_THUMBPOSITION: case SB_THUMBTRACK: vpos = Pos; break;
+	}
+	if (vpos > vmax) vpos = vmax; else if (vpos < 0) vpos = 0;
+
+	SCROLLINFO si;
+	si.cbSize = sizeof(si);
+	si.fMask = SIF_POS;
+	si.nPos = vpos;
+	this->SetScrollInfo(SB_VERT, &si);
+
+	ScrollWindow(0, old - vpos);
+	UpdateWindow();
+}
+
+afx_msg void CMainWnd::OnHScroll(UINT SBCode, UINT Pos, CScrollBar *SB)
+{
+	int old = hpos;
+
+	switch (SBCode)
+	{
+	case SB_LINERIGHT: hpos++; break;
+	case SB_LINELEFT: hpos--; break;
+	case SB_PAGERIGHT: hpos += 5; break;
+	case SB_PAGELEFT: hpos -= 5; break;
+	case SB_THUMBPOSITION: case SB_THUMBTRACK: hpos = Pos; break;
+	}
+	if (vpos > vmax) vpos = vmax; else if (vpos < 0) vpos = 0;
+	
+	SCROLLINFO si;
+	si.cbSize = sizeof(si);
+	si.fMask = SIF_POS;
+	si.nPos = hpos;
+	this->SetScrollInfo(SB_HORZ, &si);
+
+	ScrollWindow(old - hpos, 0);
+	UpdateWindow();
+}
+
 BEGIN_MESSAGE_MAP(CMainWnd, CFrameWnd)
 	ON_WM_PAINT()
 	ON_COMMAND_RANGE(0, (UINT)(-1), &CMainWnd::OnButtonClick)
+	ON_WM_VSCROLL()
+	ON_WM_HSCROLL()
 END_MESSAGE_MAP()

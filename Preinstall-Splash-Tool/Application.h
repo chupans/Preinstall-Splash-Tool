@@ -1,6 +1,7 @@
 #pragma once
 
 #include <afxwin.h>
+#include <atlimage.h>
 
 using namespace std;
 

@@ -8,22 +8,14 @@ class CMainWnd : public CFrameWnd
 {
 private:
 	static CRect GetCenterWndRect(int width, int height);
-	static CRect GetButtonRect(int x0, int y0, int btn_width, int btn_height, int delta, int index);
-	static CSize GetTextSize(CFont* font, const CString& str);
 private:
 	CXMLConfig config;
-	CImage background;
-	CImage button_icon;
-	CFont* button_font;
 	std::vector<CButton*> buttons;
 private:
-	CSize header_size;
-	CSize sub_header_size;
-	int x0;
-	int y0;
-	int button_width;
-	int button_height;
-	int button_delta;
+	int vmax;
+	int hmax;
+	int vpos;
+	int hpos;
 public:
 	CMainWnd();
 	virtual ~CMainWnd();
@@ -31,6 +23,8 @@ public:
 public:
 	afx_msg void OnPaint();
 	afx_msg void OnButtonClick(UINT id);
+	afx_msg void OnVScroll(UINT SBCode, UINT Pos, CScrollBar *SB);
+	afx_msg void OnHScroll(UINT SBCode, UINT Pos, CScrollBar *SB);
 public:
 	DECLARE_MESSAGE_MAP()
 };
