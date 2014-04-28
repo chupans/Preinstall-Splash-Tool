@@ -71,7 +71,7 @@ afx_msg void CMainWnd::OnPaint()
 		int dx = config.min_width - client_rect.Width();
 		int dy = config.min_height - client_rect.Height();
 		client_rect.right = dx + config.max_width;
-		client_rect.bottom = dy + config.min_height;
+		client_rect.bottom = dy + config.max_height;
 	}
 
 	SetStretchBltMode(dc, COLORONCOLOR);

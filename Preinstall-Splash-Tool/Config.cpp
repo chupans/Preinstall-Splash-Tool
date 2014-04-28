@@ -153,10 +153,10 @@ void CXMLConfig::CountWndSize()
 	CountDeltas();
 
 	max_width = min_width;
-	max_height = max(min_height, GetButtonRect(items.size()).bottom);
+	max_height = max(min_height, GetButtonRect(items.size()).bottom + 2 * button_button_delta_y);
 
-	max_width = max(max_width, 2 * header.width);
-	max_width = max(max_width, 2 * sub_header.width);
+	max_width = max(max_width, 1.5 * header.width);
+	max_width = max(max_width, 1.5 * sub_header.width);
 	for (UINT i = 0; i < items.size(); i++)
 	{
 		max_width = max(max_width, GetButtonTextPosition(i).x + items[i].description.width + button_text_delta_x);
