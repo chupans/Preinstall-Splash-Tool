@@ -47,8 +47,8 @@ public:
 	std::vector<Item> items;
 public:
 	CFont* button_font;
-	int wnd_width;
-	int wnd_height;
+	int max_width;
+	int max_height;
 public:
 	CXMLConfig();
 	CXMLConfig(const CString& xml_file_name);

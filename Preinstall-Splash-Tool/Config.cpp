@@ -131,7 +131,7 @@ CXMLConfig::CXMLConfig(const CString& xml_file_name)
 
 void CXMLConfig::Init()
 {
-	wnd_width = wnd_height = min_width = min_height = 0;
+	max_width = max_height = min_width = min_height = 0;
 	resize_by_content = true;
 	button_font = NULL;
 }
@@ -152,14 +152,14 @@ void CXMLConfig::CountWndSize()
 {
 	CountDeltas();
 
-	wnd_width = min_width;
-	wnd_height = max(min_height, GetButtonRect(items.size()).bottom);
+	max_width = min_width;
+	max_height = max(min_height, GetButtonRect(items.size()).bottom);
 
-	wnd_width = max(wnd_width, 2 * header.width);
-	wnd_width = max(wnd_width, 2 * sub_header.width);
+	max_width = max(max_width, 2 * header.width);
+	max_width = max(max_width, 2 * sub_header.width);
 	for (UINT i = 0; i < items.size(); i++)
 	{
-		wnd_width = max(wnd_width, GetButtonTextPosition(i).x + items[i].description.width + button_text_delta_x);
+		max_width = max(max_width, GetButtonTextPosition(i).x + items[i].description.width + button_text_delta_x);
 	}
 
 }
@@ -173,14 +173,14 @@ CPoint CXMLConfig::GetHeaderPosition()
 {
 	CPoint pos;
 	pos.y = border_header_delta_y;
-	pos.x = (wnd_width - header.width) / 2;
+	pos.x = (max_width - header.width) / 2;
 	return pos;
 }
 
 CPoint CXMLConfig::GetSubHeaderPosition()
 {
 	CPoint pos = GetHeaderPosition();
-	pos.x = (wnd_width - sub_header.width) / 2;
+	pos.x = (max_width - sub_header.width) / 2;
 	pos.y += header.height + header_subheader_delta_y;
 	return pos;
 }

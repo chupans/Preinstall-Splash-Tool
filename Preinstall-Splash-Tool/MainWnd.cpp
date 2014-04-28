@@ -20,7 +20,7 @@ CMainWnd::CMainWnd()
 	DWORD style = WS_CAPTION | WS_SYSMENU | WS_DLGFRAME;
 	if (config.resize_by_content)
 	{
-		rect = GetCenterWndRect(config.wnd_width, config.wnd_height);
+		rect = GetCenterWndRect(config.max_width, config.max_height);
 	}
 	else
 	{
@@ -41,8 +41,8 @@ CMainWnd::CMainWnd()
 	}
 
 	vpos = hpos = 0;
-	vmax = config.wnd_height - config.min_height;
-	hmax = config.wnd_width - config.min_width;
+	vmax = config.max_height - config.min_height;
+	hmax = config.max_width - config.min_width;
 	InitScroll();
 }
 
@@ -66,9 +66,12 @@ afx_msg void CMainWnd::OnPaint()
 	CPaintDC dc(this);
 	CRect client_rect;
 	GetClientRect(&client_rect);
-	if (config.resize_by_content)
+	if (!config.resize_by_content)
 	{
-		
+		int dx = config.min_width - client_rect.Width();
+		int dy = config.min_height - client_rect.Height();
+		client_rect.right = dx + config.max_width;
+		client_rect.bottom = dy + config.min_height;
 	}
 
 	SetStretchBltMode(dc, COLORONCOLOR);
