@@ -157,7 +157,7 @@ afx_msg void CMainWnd::OnVScroll(UINT SBCode, UINT Pos, CScrollBar *SB)
 	this->SetScrollInfo(SB_VERT, &si);
 
 	ScrollWindow(0, old - vpos);
-	InvalidateRect(NULL);
+	UpdateWindow();
 }
 
 afx_msg void CMainWnd::OnHScroll(UINT SBCode, UINT Pos, CScrollBar *SB)
@@ -194,7 +194,7 @@ afx_msg void CMainWnd::OnHScroll(UINT SBCode, UINT Pos, CScrollBar *SB)
 	this->SetScrollInfo(SB_HORZ, &si);
 
 	ScrollWindow(old - hpos, 0);
-	InvalidateRect(NULL, FALSE);
+	UpdateWindow();
 }
 
 BEGIN_MESSAGE_MAP(CMainWnd, CFrameWnd)
