@@ -62,25 +62,30 @@ void CMainWnd::Show()
 
 afx_msg void CMainWnd::OnPaint()
 {
+	CPoint p0(-hpos, -vpos);
 	CPaintDC dc(this);
 	CRect client_rect;
 	GetClientRect(&client_rect);
+	if (config.resize_by_content)
+	{
+		
+	}
 
 	SetStretchBltMode(dc, COLORONCOLOR);
-	config.background.StretchBlt(dc, client_rect);
+	config.background.StretchBlt(dc, p0 + client_rect);
 	
 	dc.SetBkMode(TRANSPARENT);
 
 	CPoint p = config.GetHeaderPosition();
-	config.header.Draw(dc, p.x, p.y);
+	config.header.Draw(dc, p0.x + p.x, p0.y + p.y);
 
 	p = config.GetSubHeaderPosition();
-	config.sub_header.Draw(dc, p.x, p.y);
+	config.sub_header.Draw(dc, p0.x + p.x, p0.y + p.y);
 
 	for (UINT i = 0; i < config.items.size(); i++)
 	{
-		CPoint pos = config.GetButtonTextPosition(i);
-		config.items[i].description.Draw(dc, pos.x, pos.y);
+		p = config.GetButtonTextPosition(i);
+		config.items[i].description.Draw(dc, p0.x + p.x, p0.y + p.y);
 	}
 }
 
