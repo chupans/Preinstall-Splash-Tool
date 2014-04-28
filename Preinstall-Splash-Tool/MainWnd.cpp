@@ -16,6 +16,7 @@ CRect CMainWnd::GetCenterWndRect(int width, int height)
 CMainWnd::CMainWnd()
 	: config("Docs\\configuration.xml")
 {
+	vpos = hpos = 0;
 	CRect rect;
 	DWORD style = WS_CAPTION | WS_SYSMENU | WS_DLGFRAME;
 	if (config.resize_by_content)
@@ -27,7 +28,6 @@ CMainWnd::CMainWnd()
 		rect = GetCenterWndRect(config.min_wnd_size.cx, config.min_wnd_size.cy);
 		
 		style |= WS_VSCROLL | WS_HSCROLL;
-		vpos = hpos = 0;
 		vmax = config.max_wnd_size.cy - config.min_wnd_size.cy;
 		hmax = config.max_wnd_size.cx - config.min_wnd_size.cx;
 	}

@@ -160,6 +160,7 @@ CPoint CXMLConfig::GetHeaderPosition()
 {
 	CPoint pos;
 	pos.y = border_header_delta_y;
+
 	pos.x = (max_wnd_size.cx - header.width) / 2;
 	return pos;
 }
