@@ -2,6 +2,8 @@
 
 CRect CMainWnd::GetCenterWndRect(int width, int height)
 {
+	width += 2 * (GetSystemMetrics(SM_CXEDGE) + GetSystemMetrics(SM_CXDLGFRAME));
+	height += GetSystemMetrics(SM_CYCAPTION) + 2 * (GetSystemMetrics(SM_CYEDGE) + GetSystemMetrics(SM_CYDLGFRAME));
 	CRect r;
 	::GetWindowRect(::GetDesktopWindow(), &r);
 	int screen_width = r.right - r.left;
@@ -152,7 +154,7 @@ afx_msg void CMainWnd::OnHScroll(UINT SBCode, UINT Pos, CScrollBar *SB)
 	case SB_PAGELEFT: hpos -= 5; break;
 	case SB_THUMBPOSITION: case SB_THUMBTRACK: hpos = Pos; break;
 	}
-	if (vpos > vmax) vpos = vmax; else if (vpos < 0) vpos = 0;
+	if (hpos > hmax) hpos = hmax; else if (hpos < 0) hpos = 0;
 	
 	SCROLLINFO si;
 	si.cbSize = sizeof(si);
