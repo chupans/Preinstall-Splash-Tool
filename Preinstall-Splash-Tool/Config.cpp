@@ -97,6 +97,7 @@ CXMLConfig::CXMLConfig(const CString& xml_file_name)
 		background.Load(background_file_name);
 		button.Load(button_file_name);
 
+		if (background.IsNull()) throw CString(L"Background image file not found.");
 		if (button.IsNull()) throw CString(L"Button icon file not found.");
 
 		button_font = Text::NewFont(params_node.find("header")->getAttribute("font").c_str(), GetButtonSize().cy / 2);
@@ -138,17 +139,18 @@ void CXMLConfig::CountDeltas()
 void CXMLConfig::CountMaxWndSize()
 {
 	CountDeltas();
-
 	max_wnd_size.cx = min_wnd_size.cx;
-	max_wnd_size.cy = max(min_wnd_size.cy, GetButtonRect(items.size()).bottom + 2 * button_button_delta_y);
+	max_wnd_size.cy = max(min_wnd_size.cy, GetButtonRect(items.size()).bottom + button_button_delta_y);
 
-	max_wnd_size.cx = max(max_wnd_size.cx, 3 * header.width / 2);
-	max_wnd_size.cx = max(max_wnd_size.cx, 3 * sub_header.width / 2);
+	max_wnd_size.cx = max(max_wnd_size.cx, header.width + 2 * border_button_delta_x);
+	max_wnd_size.cx = max(max_wnd_size.cx, sub_header.width + 2 * border_button_delta_x);
 	for (UINT i = 0; i < items.size(); i++)
 	{
 		max_wnd_size.cx = max(max_wnd_size.cx, GetButtonTextPosition(i).x + items[i].description.width + button_text_delta_x);
 	}
 
+	if (max_wnd_size.cx > min_wnd_size.cx) max_wnd_size.cx += GetSystemMetrics(SM_CYVSCROLL);
+	if (max_wnd_size.cy > min_wnd_size.cy) max_wnd_size.cy += GetSystemMetrics(SM_CXVSCROLL);
 }
 
 CString CXMLConfig::GetCaption()
@@ -161,14 +163,14 @@ CPoint CXMLConfig::GetHeaderPosition()
 	CPoint pos;
 	pos.y = border_header_delta_y;
 
-	pos.x = (max_wnd_size.cx - header.width) / 2;
+	pos.x = (max_wnd_size.cx - GetSystemMetrics(SM_CYVSCROLL) - 3 - header.width) / 2;
 	return pos;
 }
 
 CPoint CXMLConfig::GetSubHeaderPosition()
 {
 	CPoint pos = GetHeaderPosition();
-	pos.x = (max_wnd_size.cx - sub_header.width) / 2;
+	pos.x = (max_wnd_size.cx - GetSystemMetrics(SM_CYVSCROLL) - 3 - sub_header.width) / 2;
 	pos.y += header.height + header_subheader_delta_y;
 	return pos;
 }

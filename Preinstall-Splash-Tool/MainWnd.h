@@ -7,7 +7,8 @@
 class CMainWnd : public CFrameWnd
 {
 private:
-	static CRect GetCenterWndRect(int width, int height);
+	CRect GetCenterWndRect(int width, int height);
+	static bool IsURL(const CString& str);
 private:
 	CXMLConfig config;
 	std::vector<CButton*> buttons;
