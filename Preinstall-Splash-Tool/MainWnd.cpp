@@ -8,6 +8,8 @@ CRect CMainWnd::GetCenterWndRect(int width, int height)
 	::GetWindowRect(::GetDesktopWindow(), &r);
 	int screen_width = r.right - r.left;
 	int screen_height = r.bottom - r.top;
+	if (width > screen_width) width = screen_width;
+	if (height > screen_height) height = screen_height;
 	r.left += (screen_width - width) / 2;
 	r.top += (screen_height - height) / 2;
 	r.right = r.left + width;
@@ -116,7 +118,10 @@ afx_msg void CMainWnd::OnPaint()
 
 	for (UINT i = 0; i < config.items.size(); i++)
 	{
+		COLORREF old = RGB(0, 0, 0);
+		if (!buttons[i]->IsWindowEnabled())	old = dc.SetTextColor(RGB(127, 127, 127));
 		config.items[i].description.Draw(dc, p0 + config.GetButtonTextPosition(i));
+		dc.SetTextColor(old);
 	}
 }
 

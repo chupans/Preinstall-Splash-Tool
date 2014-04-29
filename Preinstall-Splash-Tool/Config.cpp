@@ -97,6 +97,7 @@ CXMLConfig::CXMLConfig(const CString& xml_file_name)
 		background.Load(background_file_name);
 		button.Load(button_file_name);
 
+		if (background.IsNull()) throw CString(L"Background image file not found.");
 		if (button.IsNull()) throw CString(L"Button icon file not found.");
 
 		button_font = Text::NewFont(params_node.find("header")->getAttribute("font").c_str(), GetButtonSize().cy / 2);
