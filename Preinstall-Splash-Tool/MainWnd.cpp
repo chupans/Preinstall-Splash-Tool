@@ -2,6 +2,8 @@
 
 CRect CMainWnd::GetCenterWndRect(int width, int height)
 {
+	width += 2 * (GetSystemMetrics(SM_CXEDGE) + GetSystemMetrics(SM_CXDLGFRAME));
+	height += GetSystemMetrics(SM_CYCAPTION) + 2 * (GetSystemMetrics(SM_CYEDGE) + GetSystemMetrics(SM_CYDLGFRAME));
 	CRect r;
 	::GetWindowRect(::GetDesktopWindow(), &r);
 	int screen_width = r.right - r.left;
@@ -11,6 +13,12 @@ CRect CMainWnd::GetCenterWndRect(int width, int height)
 	r.right = r.left + width;
 	r.bottom = r.top + height;
 	return r;
+}
+
+bool CMainWnd::IsURL(const CString& str)
+{
+	int i = str.Find(L"//", 0);
+	if (i < 0 || i > str.GetLength()) return false; else return true;
 }
 
 CMainWnd::CMainWnd()
@@ -58,6 +66,9 @@ CMainWnd::CMainWnd()
 		CRect r = config.GetButtonRect(i);
 		CButton* b = new CButton();
 		b->Create(L"", WS_CHILD | BS_BITMAP, r, this, i + 1);
+		wchar_t buf[MAX_PATH];
+		if (!IsURL(config.items[i].path) && (int)FindExecutableW(config.items[i].path, NULL, buf) <= 32) 
+			b->EnableWindow(FALSE);
 		b->SetBitmap(config.button);
 		b->ShowWindow(SW_SHOW);
 		buttons.push_back(b);
@@ -112,7 +123,16 @@ afx_msg void CMainWnd::OnPaint()
 afx_msg void CMainWnd::OnButtonClick(UINT id)
 {
 	CXMLConfig::Item item = config.items[id - 1];
-	ShellExecute((HWND)this, L"open", item.path, NULL, NULL, SW_SHOW);
+	HINSTANCE h = ShellExecute((HWND)this, L"open", item.path, NULL, NULL, SW_SHOW);
+	if ((int)h == SE_ERR_NOASSOC) 
+	{
+		MessageBox(L"There is no application associated with the given file name extension.", L"Error", MB_ICONERROR);
+	}
+	else if ((int)h == ERROR_FILE_NOT_FOUND || (int)h == ERROR_PATH_NOT_FOUND)
+	{
+		MessageBox(L"File not found.", L"Error", MB_ICONERROR);
+	}
+	else if ((int)h <= 32) MessageBox(L"Can not open this file or URL.", L"Error", MB_ICONERROR);
 	if (item.close) this->DestroyWindow();
 }
 
@@ -152,7 +172,7 @@ afx_msg void CMainWnd::OnHScroll(UINT SBCode, UINT Pos, CScrollBar *SB)
 	case SB_PAGELEFT: hpos -= 5; break;
 	case SB_THUMBPOSITION: case SB_THUMBTRACK: hpos = Pos; break;
 	}
-	if (vpos > vmax) vpos = vmax; else if (vpos < 0) vpos = 0;
+	if (hpos > hmax) hpos = hmax; else if (hpos < 0) hpos = 0;
 	
 	SCROLLINFO si;
 	si.cbSize = sizeof(si);
