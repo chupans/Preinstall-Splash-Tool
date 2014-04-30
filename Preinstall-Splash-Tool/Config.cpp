@@ -79,30 +79,14 @@ void CXMLConfig::Item::Load(const Node& source, CFont* font)
 
 //CXMLConfig
 
-void CXMLConfig::LoadIconOrImage(CImage& image, const CString& file_name)
+void CXMLConfig::LoadButtonIcon(CImage& image, const CString& file_name, int size)
 {
-	//int fr = file_name.Find(L"ico", 0);
-	//if (fr >= 0 && fr < file_name.GetLength())
-	//{
-	//	HANDLE h = LoadImage(GetModuleHandle(NULL), file_name, IMAGE_ICON, 0, 0, LR_LOADFROMFILE);
-	//	if (h == NULL) return;
-	//	ICONINFO ii;
-	//	GetIconInfo((HICON)h, &ii);
-	//	CImage m;
-	//	m.Attach(ii.hbmColor);
-	//	int size = 32;
-	//	image.Create(size, size, 24);
-	//	//SetStretchBltMode(image.GetDC(), COLORONCOLOR);
-	//	m.Draw(image.GetDC(), CRect(0, 0, size, size));
-
-	//	DeleteObject(ii.hbmColor);
-	//	DeleteObject(ii.hbmMask);
-	//	DestroyIcon((HICON)h);
-	//}
-	//else
-	//{
-	//	image.Load(file_name);
-	//}
+	CImage t;
+	t.Load(file_name);
+	image.Create(size, size, 32);
+	HDC dc = image.GetDC();
+	t.Draw(dc, CRect(0, 0, size, size));
+	image.ReleaseDC();
 }
 
 CXMLConfig::CXMLConfig(const CString& xml_file_name)
@@ -117,17 +101,19 @@ CXMLConfig::CXMLConfig(const CString& xml_file_name)
 		header.Load(*params_node.find("header"));
 		sub_header.Load(*params_node.find("subHeader"));
 
+		button_font = sub_header.font;
+
 		CString background_file_name = params_node.find("backgroundImage")->data().c_str();
 		CString button_file_name = params_node.find("buttonIcon")->data().c_str();
 
 		background.Load(background_file_name);
-		button.Load(button_file_name);
-		//LoadIconOrImage(button, button_file_name);
+		//button.Load(button_file_name);
+		LoadButtonIcon(button, button_file_name, sub_header.height);
 
 		if (background.IsNull()) throw CString(L"Background image file not found.");
 		if (button.IsNull()) throw CString(L"Button icon file not found.");
 
-		button_font = Text::NewFont(params_node.find("header")->getAttribute("font").c_str(), GetButtonSize().cy / 2);
+		/*button_font = Text::NewFont(params_node.find("header")->getAttribute("font").c_str(), GetButtonSize().cy / 2);*/
 
 		Node& window_size_node = *params_node.find("windowSize");
 		min_wnd_size.cx = atoi(window_size_node.getAttribute("minWidth").c_str());
