@@ -50,6 +50,7 @@ public:
 public:
 	CXMLConfig(const CString& xml_file_name);
 private:
+	static void LoadIconOrImage(CImage& image, const CString& file_name);
 	void CountDeltas();
 	void CountMaxWndSize();
 private:

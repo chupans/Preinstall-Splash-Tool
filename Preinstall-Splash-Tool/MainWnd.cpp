@@ -72,6 +72,7 @@ CMainWnd::CMainWnd()
 		if (!IsURL(config.items[i].path) && (int)FindExecutableW(config.items[i].path, NULL, buf) <= 32) 
 			b->EnableWindow(FALSE);
 		b->SetBitmap(config.button);
+		b->SetIcon();
 		b->ShowWindow(SW_SHOW);
 		buttons.push_back(b);
 	}

@@ -79,6 +79,32 @@ void CXMLConfig::Item::Load(const Node& source, CFont* font)
 
 //CXMLConfig
 
+void CXMLConfig::LoadIconOrImage(CImage& image, const CString& file_name)
+{
+	//int fr = file_name.Find(L"ico", 0);
+	//if (fr >= 0 && fr < file_name.GetLength())
+	//{
+	//	HANDLE h = LoadImage(GetModuleHandle(NULL), file_name, IMAGE_ICON, 0, 0, LR_LOADFROMFILE);
+	//	if (h == NULL) return;
+	//	ICONINFO ii;
+	//	GetIconInfo((HICON)h, &ii);
+	//	CImage m;
+	//	m.Attach(ii.hbmColor);
+	//	int size = 32;
+	//	image.Create(size, size, 24);
+	//	//SetStretchBltMode(image.GetDC(), COLORONCOLOR);
+	//	m.Draw(image.GetDC(), CRect(0, 0, size, size));
+
+	//	DeleteObject(ii.hbmColor);
+	//	DeleteObject(ii.hbmMask);
+	//	DestroyIcon((HICON)h);
+	//}
+	//else
+	//{
+	//	image.Load(file_name);
+	//}
+}
+
 CXMLConfig::CXMLConfig(const CString& xml_file_name)
 {
 	ifstream stream((LPCWSTR)xml_file_name);
@@ -96,6 +122,7 @@ CXMLConfig::CXMLConfig(const CString& xml_file_name)
 
 		background.Load(background_file_name);
 		button.Load(button_file_name);
+		//LoadIconOrImage(button, button_file_name);
 
 		if (background.IsNull()) throw CString(L"Background image file not found.");
 		if (button.IsNull()) throw CString(L"Button icon file not found.");
