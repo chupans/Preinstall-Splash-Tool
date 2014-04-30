@@ -113,8 +113,6 @@ CXMLConfig::CXMLConfig(const CString& xml_file_name)
 		if (background.IsNull()) throw CString(L"Background image file not found.");
 		if (button.IsNull()) throw CString(L"Button icon file not found.");
 
-		/*button_font = Text::NewFont(params_node.find("header")->getAttribute("font").c_str(), GetButtonSize().cy / 2);*/
-
 		Node& window_size_node = *params_node.find("windowSize");
 		min_wnd_size.cx = atoi(window_size_node.getAttribute("minWidth").c_str());
 		min_wnd_size.cy = atoi(window_size_node.getAttribute("minHeight").c_str());
