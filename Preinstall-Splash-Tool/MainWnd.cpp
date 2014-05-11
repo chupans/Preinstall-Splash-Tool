@@ -70,8 +70,11 @@ CMainWnd::CMainWnd()
 		b->Create(L"", WS_CHILD | BS_BITMAP, r, this, i + 1);
 		wchar_t buf[MAX_PATH];
 		if (!IsURL(config.items[i].path) && (int)FindExecutableW(config.items[i].path, NULL, buf) <= 32) 
+		{
 			b->EnableWindow(FALSE);
-		b->SetBitmap(config.button);
+			config.items[i].description.color = RGB(127, 127, 127);
+		}
+		b->SetBitmap(*config.items[i].button);
 		b->ShowWindow(SW_SHOW);
 		buttons.push_back(b);
 	}
@@ -118,10 +121,7 @@ afx_msg void CMainWnd::OnPaint()
 
 	for (UINT i = 0; i < config.items.size(); i++)
 	{
-		COLORREF old = RGB(0, 0, 0);
-		if (!buttons[i]->IsWindowEnabled())	old = dc.SetTextColor(RGB(127, 127, 127));
 		config.items[i].description.Draw(dc, p0 + config.GetButtonTextPosition(i));
-		dc.SetTextColor(old);
 	}
 }
 

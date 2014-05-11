@@ -8,14 +8,41 @@ using namespace MXML;
 
 CXMLConfig::Text::Text()
 {
+	color = RGB(0,0,0);
 	width = height = 0;
 	font = NULL;
+}
+
+void LoadColor(const Node& source, COLORREF& color)
+{
+	try 
+	{ 
+		char* t;
+		string s = source.getAttribute("color");
+		const char* c = s.c_str();
+		if (c[0] == '#') c++;
+		long l = strtol(c, &t, 16);
+		t = (char*)&l;
+		color = RGB(t[2], t[1], t[0]);
+	}
+	catch(...) {}
+}
+
+void LoadButtonIcon(CImage& image, const CString& file_name, int size)
+{
+	CImage t;
+	t.Load(file_name);
+	image.Create(size, size, 32);
+	HDC dc = image.GetDC();
+	t.Draw(dc, CRect(0, 0, size, size));
+	image.ReleaseDC();
 }
 
 void CXMLConfig::Text::Load(const Node& source)
 {
 	text = source.getAttribute("text").c_str();
 	this->font = LoadFont(source);
+	LoadColor(source, color);
 	CSize size = CountTextSize(font, text);
 	width = size.cx;
 	height = size.cy;
@@ -24,6 +51,7 @@ void CXMLConfig::Text::Load(const Node& source)
 void CXMLConfig::Text::Draw(CDC& dc, CPoint pos)
 {
 	dc.SelectObject(font);
+	dc.SetTextColor(color);
 	dc.TextOutW(pos.x, pos.y, text);
 }
 
@@ -63,31 +91,33 @@ CSize CXMLConfig::Text::CountTextSize(CFont* font, const CString& str)
 CXMLConfig::Item::Item()
 {
 	close = false;
+	button = NULL;
 }
 
-void CXMLConfig::Item::Load(const Node& source, CFont* font)
+void CXMLConfig::Item::Load(const Node& source, CFont* font, CImage* button)
 {
+	this->button = button;
 	description.text = source.getAttribute("descr").c_str();
 	description.font = font;
+	LoadColor(source, description.color);
 	CSize size = Text::CountTextSize(font, description.text);
 	description.width = size.cx;
 	description.height = size.cy;
 
 	path = source.getAttribute("path").c_str();
 	close = (source.getAttribute("close") == "Y");
+
+	try
+	{
+		string fn = source.getAttribute("icon");
+		CImage* img = new CImage();
+		LoadButtonIcon(*img, fn.c_str(), button->GetWidth());
+		this->button = img;
+	}
+	catch(...) {}
 }
 
 //CXMLConfig
-
-void CXMLConfig::LoadButtonIcon(CImage& image, const CString& file_name, int size)
-{
-	CImage t;
-	t.Load(file_name);
-	image.Create(size, size, 32);
-	HDC dc = image.GetDC();
-	t.Draw(dc, CRect(0, 0, size, size));
-	image.ReleaseDC();
-}
 
 CXMLConfig::CXMLConfig(const CString& xml_file_name)
 {
@@ -107,7 +137,6 @@ CXMLConfig::CXMLConfig(const CString& xml_file_name)
 		CString button_file_name = params_node.find("buttonIcon")->data().c_str();
 
 		background.Load(background_file_name);
-		//button.Load(button_file_name);
 		LoadButtonIcon(button, button_file_name, sub_header.height);
 
 		if (background.IsNull()) throw CString(L"Background image file not found.");
@@ -122,7 +151,7 @@ CXMLConfig::CXMLConfig(const CString& xml_file_name)
 		for (Node::iterator i = items_node.begin(); i != items_node.end(); i++)
 		{
 			Item item; 
-			item.Load(*i, button_font);
+			item.Load(*i, button_font, &button);
 			items.push_back(item);
 		}
 
