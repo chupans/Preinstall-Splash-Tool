@@ -74,7 +74,7 @@ CMainWnd::CMainWnd()
 			b->EnableWindow(FALSE);
 			config.items[i].description.color = RGB(127, 127, 127);
 		}
-		b->SetBitmap(config.button);
+		b->SetBitmap(*config.items[i].button);
 		b->ShowWindow(SW_SHOW);
 		buttons.push_back(b);
 	}

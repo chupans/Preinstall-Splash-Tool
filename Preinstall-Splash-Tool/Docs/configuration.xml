@@ -7,7 +7,7 @@
   <windowSize minWidth="300" minHeight="200" resizeByContent="Y"></windowSize>
   <windowCaption>Test</windowCaption>
   <items>
-    <item descr="Open some pdf" path="Docs\test.pdf" close="N" color="#00FF00"></item>
+    <item descr="Open some pdf" path="Docs\test.pdf" close="N" color="#00FF00" icon="Docs\button2.bmp"></item>
     <item descr="Watch some movie" path="Docs\test.wmv" close="N"></item>
     <item descr="Visit some site" path="http://google.com" close="N"></item>
     <item descr="Run some program" path="Docs\test.exe" close="Y"></item>

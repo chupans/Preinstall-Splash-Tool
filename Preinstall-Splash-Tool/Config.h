@@ -30,9 +30,10 @@ public:
 		Text description;
 		CString path;
 		bool close;
+		CImage* button;
 	public:
 		Item();
-		void Load(const MXML::Node& source, CFont* font);
+		void Load(const MXML::Node& source, CFont* font, CImage* button);
 	};
 public:
 	Text header;
@@ -51,7 +52,6 @@ public:
 public:
 	CXMLConfig(const CString& xml_file_name);
 private:
-	void LoadButtonIcon(CImage& image, const CString& file_name, int size);
 	void CountDeltas();
 	void CountMaxWndSize();
 private:
