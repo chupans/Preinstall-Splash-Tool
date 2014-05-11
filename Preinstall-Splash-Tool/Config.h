@@ -14,6 +14,7 @@ public:
 		CFont* font;
 		int width;
 		int height;
+		COLORREF color;
 	public:
 		Text();
 		void Load(const MXML::Node& source);

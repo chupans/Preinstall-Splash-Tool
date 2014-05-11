@@ -8,14 +8,31 @@ using namespace MXML;
 
 CXMLConfig::Text::Text()
 {
+	color = RGB(0,0,0);
 	width = height = 0;
 	font = NULL;
+}
+
+void LoadColor(const Node& source, COLORREF& color)
+{
+	try 
+	{ 
+		char* t;
+		string s = source.getAttribute("color");
+		const char* c = s.c_str();
+		if (c[0] == '#') c++;
+		long l = strtol(c, &t, 16);
+		t = (char*)&l;
+		color = RGB(t[2], t[1], t[0]);
+	}
+	catch(...) {}
 }
 
 void CXMLConfig::Text::Load(const Node& source)
 {
 	text = source.getAttribute("text").c_str();
 	this->font = LoadFont(source);
+	LoadColor(source, color);
 	CSize size = CountTextSize(font, text);
 	width = size.cx;
 	height = size.cy;
@@ -24,6 +41,7 @@ void CXMLConfig::Text::Load(const Node& source)
 void CXMLConfig::Text::Draw(CDC& dc, CPoint pos)
 {
 	dc.SelectObject(font);
+	dc.SetTextColor(color);
 	dc.TextOutW(pos.x, pos.y, text);
 }
 
@@ -69,6 +87,7 @@ void CXMLConfig::Item::Load(const Node& source, CFont* font)
 {
 	description.text = source.getAttribute("descr").c_str();
 	description.font = font;
+	LoadColor(source, description.color);
 	CSize size = Text::CountTextSize(font, description.text);
 	description.width = size.cx;
 	description.height = size.cy;
