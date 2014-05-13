@@ -33,7 +33,7 @@ public:
 		CImage* button;
 	public:
 		Item();
-		void Load(const MXML::Node& source, CFont* font, CImage* button);
+		void Load(const MXML::Node& source, CFont* font, CImage* button, COLORREF color);
 	};
 public:
 	Text header;
