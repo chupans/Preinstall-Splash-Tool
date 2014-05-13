@@ -13,19 +13,14 @@ CXMLConfig::Text::Text()
 	font = NULL;
 }
 
-void LoadColor(const Node& source, COLORREF& color)
+void StrToColor(const string& str, COLORREF& color)
 {
-	try 
-	{ 
-		char* t;
-		string s = source.getAttribute("color");
-		const char* c = s.c_str();
-		if (c[0] == '#') c++;
-		long l = strtol(c, &t, 16);
-		t = (char*)&l;
-		color = RGB(t[2], t[1], t[0]);
-	}
-	catch(...) {}
+	const char* c = str.c_str();
+	char* t;
+	if (c[0] == '#') c++;
+	long l = strtol(c, &t, 16);
+	t = (char*)&l;
+	color = RGB(t[2], t[1], t[0]);
 }
 
 void LoadButtonIcon(CImage& image, const CString& file_name, int size)
@@ -42,7 +37,7 @@ void CXMLConfig::Text::Load(const Node& source)
 {
 	text = source.getAttribute("text").c_str();
 	this->font = LoadFont(source);
-	LoadColor(source, color);
+	if (source.hasAttribute("color")) StrToColor(source.getAttribute("color"), color);
 	CSize size = CountTextSize(font, text);
 	width = size.cx;
 	height = size.cy;
@@ -94,12 +89,12 @@ CXMLConfig::Item::Item()
 	button = NULL;
 }
 
-void CXMLConfig::Item::Load(const Node& source, CFont* font, CImage* button)
+void CXMLConfig::Item::Load(const Node& source, CFont* font, CImage* button, COLORREF color)
 {
 	this->button = button;
 	description.text = source.getAttribute("descr").c_str();
 	description.font = font;
-	LoadColor(source, description.color);
+	description.color = color;
 	CSize size = Text::CountTextSize(font, description.text);
 	description.width = size.cx;
 	description.height = size.cy;
@@ -148,11 +143,19 @@ CXMLConfig::CXMLConfig(const CString& xml_file_name)
 		resize_by_content = window_size_node.getAttribute("resizeByContent") == "Y";
 
 		Node& items_node = *params_node.find("items");
+		COLORREF btn_color = RGB(0, 0, 0);
 		for (Node::iterator i = items_node.begin(); i != items_node.end(); i++)
 		{
-			Item item; 
-			item.Load(*i, button_font, &button);
-			items.push_back(item);
+			if (i->name() == "buttonTextColor")
+			{
+				StrToColor(i->data(), btn_color);
+			}
+			else
+			{
+				Item item; 
+				item.Load(*i, button_font, &button, btn_color);
+				items.push_back(item);
+			}
 		}
 
 		CountMaxWndSize();

@@ -7,9 +7,12 @@
   <windowSize minWidth="300" minHeight="200" resizeByContent="Y"></windowSize>
   <windowCaption>Test</windowCaption>
   <items>
-    <item descr="Open some pdf" path="Docs\test.pdf" close="N" color="#00FF00" icon="Docs\button2.bmp"></item>
+    <buttonTextColor>FF0000</buttonTextColor>
+    <item descr="Open some pdf" path="Docs\test.pdf" close="N" icon="Docs\button2.bmp"></item>
     <item descr="Watch some movie" path="Docs\test.wmv" close="N"></item>
+    <buttonTextColor>FF7500</buttonTextColor>
     <item descr="Visit some site" path="http://google.com" close="N"></item>
+    <buttonTextColor>000000</buttonTextColor>
     <item descr="Run some program" path="Docs\test.exe" close="Y"></item>
   </items>
 </params>
