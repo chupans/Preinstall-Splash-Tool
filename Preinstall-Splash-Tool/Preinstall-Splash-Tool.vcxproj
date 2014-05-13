@@ -82,6 +82,8 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableUAC>false</EnableUAC>
+      <UACExecutionLevel>HighestAvailable</UACExecutionLevel>
     </Link>
     <Midl>
       <MkTypLibCompatible>false</MkTypLibCompatible>
@@ -108,6 +110,8 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
+      <UACExecutionLevel>HighestAvailable</UACExecutionLevel>
+      <EnableUAC>false</EnableUAC>
     </Link>
     <Midl>
       <MkTypLibCompatible>false</MkTypLibCompatible>
