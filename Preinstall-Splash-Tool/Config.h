@@ -38,6 +38,7 @@ public:
 public:
 	Text header;
 	Text sub_header;
+	CString caption;
 
 	CImage background;
 	CImage button;
