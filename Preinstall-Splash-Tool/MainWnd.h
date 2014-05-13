@@ -2,6 +2,7 @@
 
 #include "Application.h"
 #include "Config.h"
+#include "resource.h"
 #include <atlimage.h>
 
 class CMainWnd : public CFrameWnd

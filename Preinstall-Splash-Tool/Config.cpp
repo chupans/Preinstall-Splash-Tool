@@ -82,7 +82,8 @@ void CXMLConfig::Item::Load(const Node& source, CFont* font)
 void CXMLConfig::LoadButtonIcon(CImage& image, const CString& file_name, int size)
 {
 	CImage t;
-	t.Load(file_name);
+	if (t.Load(file_name) != S_OK)
+		return;
 	image.Create(size, size, 32);
 	HDC dc = image.GetDC();
 	t.Draw(dc, CRect(0, 0, size, size));
@@ -96,10 +97,12 @@ CXMLConfig::CXMLConfig(const CString& xml_file_name)
 	try
 	{
 		Document doc(stream);
+		if (doc.main() == NULL) throw CString(L"Error reading XML file.");
 		Node& params_node = *doc.root()->find("params");
 
 		header.Load(*params_node.find("header"));
 		sub_header.Load(*params_node.find("subHeader"));
+		caption = params_node.find("windowCaption")->data().c_str();
 
 		button_font = sub_header.font;
 
@@ -166,7 +169,7 @@ void CXMLConfig::CountMaxWndSize()
 
 CString CXMLConfig::GetCaption()
 {
-	return header.text;
+	return caption;
 }
 
 CPoint CXMLConfig::GetHeaderPosition()
