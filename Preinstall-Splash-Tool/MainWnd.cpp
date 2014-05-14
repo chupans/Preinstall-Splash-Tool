@@ -123,6 +123,9 @@ afx_msg void CMainWnd::OnPaint()
 	{
 		config.items[i].description.Draw(dc, p0 + config.GetButtonTextPosition(i));
 	}
+
+	HICON hIcon = LoadIcon(AfxGetInstanceHandle(), MAKEINTRESOURCE(IDI_ICON_EMERSON));
+	SetIcon(hIcon, TRUE);
 }
 
 afx_msg void CMainWnd::OnButtonClick(UINT id)
