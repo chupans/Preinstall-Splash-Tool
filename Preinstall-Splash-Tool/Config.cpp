@@ -25,9 +25,18 @@ void StrToColor(const string& str, COLORREF& color)
 
 void LoadButtonIcon(CImage& image, const CString& file_name, int size)
 {
+	static CSize ico_size;
 	CImage t;
 	if (t.Load(file_name) != S_OK)
 		return;
+	if (ico_size.cx == ico_size.cy == 0)
+	{
+		ico_size = CSize(t.GetWidth(), t.GetHeight());
+	}
+	else
+	{
+		if (ico_size.cx != t.GetWidth() || ico_size.cy != t.GetHeight()) throw CString("Different button icon size.");
+	}
 	image.Create(size, size, 32);
 	HDC dc = image.GetDC();
 	t.Draw(dc, CRect(0, 0, size, size));
