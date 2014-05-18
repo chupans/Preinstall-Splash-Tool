@@ -29,7 +29,7 @@ void LoadButtonIcon(CImage& image, const CString& file_name, int size)
 	CImage t;
 	if (t.Load(file_name) != S_OK)
 		return;
-	if (ico_size.cx == ico_size.cy == 0)
+	if (ico_size.cx == 0 && ico_size.cy == 0)
 	{
 		ico_size = CSize(t.GetWidth(), t.GetHeight());
 	}
@@ -37,19 +37,29 @@ void LoadButtonIcon(CImage& image, const CString& file_name, int size)
 	{
 		if (ico_size.cx != t.GetWidth() || ico_size.cy != t.GetHeight()) throw CString("Different button icon size.");
 	}
-	image.Create(size, size, 32);
+	image.Create(ico_size.cx, ico_size.cx, 32);
 	HDC dc = image.GetDC();
-	t.Draw(dc, CRect(0, 0, size, size));
+	t.Draw(dc, CRect(0, 0, ico_size.cx, ico_size.cy));
 	image.ReleaseDC();
 }
 
 void CXMLConfig::Text::Load(const Node& source)
 {
+    CSize size;
 	text = source.getAttribute("text").c_str();
 	this->font = LoadFont(source);
 	if (source.hasAttribute("color")) StrToColor(source.getAttribute("color"), color);
-	CSize size = CountTextSize(font, text);
-	width = size.cx;
+    if (text.GetLength() == 0)
+    {
+      size = CountTextSize(font, "1");
+      width = 0;
+    }
+    else
+    {
+      size = CountTextSize(font, text);
+      width = size.cx;
+    }
+
 	height = size.cy;
 }
 
@@ -158,6 +168,8 @@ CXMLConfig::CXMLConfig(const CString& xml_file_name)
 		COLORREF btn_color = RGB(0, 0, 0);
 		for (Node::iterator i = items_node.begin(); i != items_node.end(); i++)
 		{
+          if (i->nodeType() != Node::type::typeComment)
+          {
 			if (i->name() == "buttonTextColor")
 			{
 				StrToColor(i->data(), btn_color);
@@ -168,6 +180,7 @@ CXMLConfig::CXMLConfig(const CString& xml_file_name)
 				item.Load(*i, button_font, &button, btn_color);
 				items.push_back(item);
 			}
+          }
 		}
 
 		CountMaxWndSize();
