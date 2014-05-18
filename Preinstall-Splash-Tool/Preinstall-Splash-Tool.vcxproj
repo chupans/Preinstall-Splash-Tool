@@ -22,7 +22,6 @@
     <ClInclude Include="mxml\include\mxml_iterator.h" />
     <ClInclude Include="mxml\include\mxml_node.h" />
     <ClInclude Include="mxml\include\mxml_utility.h" />
-    <ClInclude Include="resource.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Application.cpp" />
@@ -33,12 +32,6 @@
     <ClCompile Include="mxml\src\mxml_error.cpp" />
     <ClCompile Include="mxml\src\mxml_node.cpp" />
     <ClCompile Include="mxml\src\mxml_utility.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ResourceCompile Include="Preinstall-Splash-Tool.rc" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="..\..\Graphics\emerson.ico" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{59309764-A847-4BE3-B522-88EDEE1E99E2}</ProjectGuid>
@@ -75,6 +68,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>false</LinkIncremental>
     <IncludePath>$(MSBuildProjectDirectory)\mxml\include;$(IncludePath)</IncludePath>
+    <GenerateManifest>false</GenerateManifest>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
@@ -90,8 +84,10 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <EnableUAC>false</EnableUAC>
-      <UACExecutionLevel>HighestAvailable</UACExecutionLevel>
+      <EnableUAC>true</EnableUAC>
+      <UACExecutionLevel>RequireAdministrator</UACExecutionLevel>
+      <AllowIsolation>true</AllowIsolation>
+      <UACUIAccess>true</UACUIAccess>
     </Link>
     <Midl>
       <MkTypLibCompatible>false</MkTypLibCompatible>
@@ -119,8 +115,10 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <UACExecutionLevel>HighestAvailable</UACExecutionLevel>
-      <EnableUAC>false</EnableUAC>
+      <UACExecutionLevel>AsInvoker</UACExecutionLevel>
+      <EnableUAC>true</EnableUAC>
+      <UACUIAccess>false</UACUIAccess>
+      <AllowIsolation>true</AllowIsolation>
     </Link>
     <Midl>
       <MkTypLibCompatible>false</MkTypLibCompatible>

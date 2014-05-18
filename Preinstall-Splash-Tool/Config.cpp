@@ -29,7 +29,7 @@ void LoadButtonIcon(CImage& image, const CString& file_name, int size)
 	CImage t;
 	if (t.Load(file_name) != S_OK)
 		return;
-	if (ico_size.cx == ico_size.cy == 0)
+	if (ico_size.cx == 0 && ico_size.cy == 0)
 	{
 		ico_size = CSize(t.GetWidth(), t.GetHeight());
 	}
