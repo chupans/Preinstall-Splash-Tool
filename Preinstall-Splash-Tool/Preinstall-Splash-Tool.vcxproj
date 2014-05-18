@@ -22,6 +22,7 @@
     <ClInclude Include="mxml\include\mxml_iterator.h" />
     <ClInclude Include="mxml\include\mxml_node.h" />
     <ClInclude Include="mxml\include\mxml_utility.h" />
+    <ClInclude Include="resource.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Application.cpp" />
@@ -32,6 +33,9 @@
     <ClCompile Include="mxml\src\mxml_error.cpp" />
     <ClCompile Include="mxml\src\mxml_node.cpp" />
     <ClCompile Include="mxml\src\mxml_utility.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Preinstall-Splash-Tool.rc" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{59309764-A847-4BE3-B522-88EDEE1E99E2}</ProjectGuid>

@@ -50,6 +50,9 @@
     <ClInclude Include="mxml\include\mxml_utility.h">
       <Filter>Header files\mxml</Filter>
     </ClInclude>
+    <ClInclude Include="resource.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Application.cpp">
@@ -76,5 +79,8 @@
     <ClCompile Include="mxml\src\mxml_utility.cpp">
       <Filter>Source code\mxml</Filter>
     </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Preinstall-Splash-Tool.rc" />
   </ItemGroup>
 </Project>
