@@ -83,7 +83,4 @@
   <ItemGroup>
     <ResourceCompile Include="Preinstall-Splash-Tool.rc" />
   </ItemGroup>
-  <ItemGroup>
-    <None Include="..\..\Graphics\emerson.ico" />
-  </ItemGroup>
 </Project>
