@@ -23,19 +23,26 @@ void StrToColor(const string& str, COLORREF& color)
 	color = RGB(t[2], t[1], t[0]);
 }
 
-void LoadButtonIcon(CImage& image, const CString& file_name, int size)
+void LoadButtonIcon(CImage& image, const CString& file_name, int size, int nItem)
 {
 	static CSize ico_size;
 	CImage t;
 	if (t.Load(file_name) != S_OK)
-		return;
+    {
+        CString err;
+        if (nItem == -1)
+            err.Format(L"General icon not found");
+        else
+            err.Format(L"Item %d - button icon file %s not found.", nItem, file_name);
+		throw (err);
+    }
 	if (ico_size.cx == 0 && ico_size.cy == 0)
 	{
 		ico_size = CSize(t.GetWidth(), t.GetHeight());
 	}
 	else
 	{
-		if (ico_size.cx != t.GetWidth() || ico_size.cy != t.GetHeight()) throw CString("Different button icon size.");
+		if (ico_size.cx != t.GetWidth() || ico_size.cy != t.GetHeight()) throw CString(L"Different button icon size.");
 	}
 	image.Create(ico_size.cx, ico_size.cx, 32);
 	HDC dc = image.GetDC();
@@ -111,6 +118,7 @@ CXMLConfig::Item::Item()
 
 void CXMLConfig::Item::Load(const Node& source, CFont* font, CImage* button, COLORREF color)
 {
+    static int nItem = 0;
 	this->button = button;
 	description.text = source.getAttribute("descr").c_str();
 	description.font = font;
@@ -126,9 +134,11 @@ void CXMLConfig::Item::Load(const Node& source, CFont* font, CImage* button, COL
 	{
 		string fn = source.getAttribute("icon");
 		CImage* img = new CImage();
-		LoadButtonIcon(*img, fn.c_str(), button->GetWidth());
+		LoadButtonIcon(*img, fn.c_str(), button->GetWidth(), nItem);
 		this->button = img;
+        nItem++;
 	}
+    catch (const CString& exception) { throw exception; }
 	catch(...) {}
 }
 
@@ -154,10 +164,10 @@ CXMLConfig::CXMLConfig(const CString& xml_file_name)
 		CString button_file_name = params_node.find("buttonIcon")->data().c_str();
 
 		background.Load(background_file_name);
-		LoadButtonIcon(button, button_file_name, sub_header.height);
+		LoadButtonIcon(button, button_file_name, sub_header.height, -1);
 
-		if (background.IsNull()) throw CString(L"Background image file not found.");
-		if (button.IsNull()) throw CString(L"Button icon file not found.");
+		if (background.IsNull()) throw (CString(L"Background image ") + background_file_name + CString(L" not found."));
+		if (button.IsNull()) throw (CString(L"Button icon ") + button_file_name + CString(L" not found."));
 
 		Node& window_size_node = *params_node.find("windowSize");
 		min_wnd_size.cx = atoi(window_size_node.getAttribute("minWidth").c_str());
@@ -223,7 +233,7 @@ void CXMLConfig::CountMaxWndSize()
 
 CString CXMLConfig::GetCaption()
 {
-	return caption;
+	return caption + CString(L" ") + CString(STR_VERSION);
 }
 
 CPoint CXMLConfig::GetHeaderPosition()
